@@ -1,6 +1,3 @@
-# MVP TECH SPEC — Prompt-Based Pattern Editor
-**Version 1.0 – Internal Draft**
-
 # **MVP TECH SPEC — Prompt-Based Pattern Editor**
 **Version 1.0 – Internal Draft**
 
