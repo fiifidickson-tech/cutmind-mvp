@@ -1,0 +1,209 @@
+{
+  "ease_presets": {
+    "standard": {
+      "label": "Standard fit (default)",
+      "width_delta_percent": 0,
+      "hem_delta_cm": 0,
+      "shoulder_delta_cm": 0,
+      "armhole_depth_delta_cm": 0
+    },
+    "relaxed_fit": {
+      "label": "Relaxed fit",
+      "width_delta_percent": 6,
+      "hem_delta_cm": 1,
+      "shoulder_delta_cm": 0.5,
+      "armhole_depth_delta_cm": 1
+    },
+    "tailored_fitted": {
+      "label": "Tailored / fitted",
+      "width_delta_percent": -4,
+      "hem_delta_cm": 0,
+      "shoulder_delta_cm": -0.5,
+      "armhole_depth_delta_cm": -0.5
+    },
+    "skin_tight": {
+      "label": "Skin-tight",
+      "width_delta_percent": -8,
+      "hem_delta_cm": 0,
+      "shoulder_delta_cm": 0,
+      "armhole_depth_delta_cm": -1
+    },
+    "classic_boxy": {
+      "label": "Classic boxy",
+      "width_delta_percent": 12,
+      "hem_delta_cm": -2,
+      "shoulder_delta_cm": 1.5,
+      "armhole_depth_delta_cm": 0.5
+    },
+    "oversized": {
+      "label": "Oversized",
+      "width_delta_percent": 20,
+      "hem_delta_cm": 3,
+      "shoulder_delta_cm": 2,
+      "armhole_depth_delta_cm": 1.5
+    },
+    "super_oversized": {
+      "label": "Super oversized",
+      "width_delta_percent": 28,
+      "hem_delta_cm": 5,
+      "shoulder_delta_cm": 3,
+      "armhole_depth_delta_cm": 2
+    },
+    "cropped_fitted": {
+      "label": "Cropped fitted",
+      "width_delta_percent": -2,
+      "hem_delta_cm": -10,
+      "shoulder_delta_cm": 0,
+      "armhole_depth_delta_cm": -0.5
+    },
+    "cropped_boxy": {
+      "label": "Cropped boxy",
+      "width_delta_percent": 10,
+      "hem_delta_cm": -10,
+      "shoulder_delta_cm": 1.5,
+      "armhole_depth_delta_cm": 0.5
+    },
+    "athleisure": {
+      "label": "Athleisure",
+      "width_delta_percent": 8,
+      "hem_delta_cm": 2,
+      "shoulder_delta_cm": 1,
+      "armhole_depth_delta_cm": 1
+    }
+  },
+
+  "phrase_patterns": [
+    { "patterns": ["standard fit", "normal fit", "default fit"], "fit_preset": "standard" },
+    { "patterns": ["relaxed", "relaxed fit", "looser"], "fit_preset": "relaxed_fit" },
+    { "patterns": ["fitted", "tailored", "more fitted"], "fit_preset": "tailored_fitted" },
+    { "patterns": ["tight", "skin tight", "body hugging"], "fit_preset": "skin_tight" },
+    { "patterns": ["boxy", "make it boxy"], "fit_preset": "classic_boxy" },
+    { "patterns": ["oversized", "baggy"], "fit_preset": "oversized" },
+    { "patterns": ["super oversized", "very oversized"], "fit_preset": "super_oversized" },
+    { "patterns": ["cropped fitted", "tight crop"], "fit_preset": "cropped_fitted" },
+    { "patterns": ["cropped boxy", "boxy crop"], "fit_preset": "cropped_boxy" },
+    { "patterns": ["athleisure", "sporty"], "fit_preset": "athleisure" }
+  ],
+
+  "length_patterns": [
+    {
+      "patterns": ["slightly cropped", "crop it a bit"],
+      "operations": [{ "rule": "change_hem_length", "amount": -5, "unit": "cm" }]
+    },
+    {
+      "patterns": ["crop it", "make it cropped"],
+      "operations": [{ "rule": "change_hem_length", "amount": -10, "unit": "cm" }]
+    },
+    {
+      "patterns": ["super cropped", "crop it a lot"],
+      "operations": [{ "rule": "change_hem_length", "amount": -15, "unit": "cm" }]
+    },
+    {
+      "patterns": ["slightly longer", "make it a bit longer"],
+      "operations": [{ "rule": "change_hem_length", "amount": 3, "unit": "cm" }]
+    },
+    {
+      "patterns": ["much longer", "t-shirt dress", "longline"],
+      "operations": [{ "rule": "change_hem_length", "amount": 10, "unit": "cm" }]
+    }
+  ],
+
+  "neckline_patterns": [
+    {
+      "patterns": ["slightly wider neckline"],
+      "operations": [{ "rule": "change_neckline_width", "amount": 1, "unit": "cm" }]
+    },
+    {
+      "patterns": ["widen the neckline"],
+      "operations": [{ "rule": "change_neckline_width", "amount": 2, "unit": "cm" }]
+    },
+    {
+      "patterns": ["very wide neckline"],
+      "operations": [{ "rule": "change_neckline_width", "amount": 3, "unit": "cm" }]
+    },
+    {
+      "patterns": ["narrow neckline"],
+      "operations": [{ "rule": "change_neckline_width", "amount": -1, "unit": "cm" }]
+    },
+    {
+      "patterns": ["slightly deeper neckline"],
+      "operations": [{ "rule": "change_neckline_depth", "amount": 1, "unit": "cm" }]
+    },
+    {
+      "patterns": ["deeper neckline"],
+      "operations": [{ "rule": "change_neckline_depth", "amount": 2.5, "unit": "cm" }]
+    },
+    {
+      "patterns": ["deep neckline"],
+      "operations": [{ "rule": "change_neckline_depth", "amount": 4, "unit": "cm" }]
+    },
+    {
+      "patterns": ["raise the neckline"],
+      "operations": [{ "rule": "change_neckline_depth", "amount": -1.5, "unit": "cm" }]
+    }
+  ],
+
+  "shoulder_armhole_patterns": [
+    {
+      "patterns": ["slightly wider shoulders"],
+      "operations": [{ "rule": "change_shoulder_width", "amount": 1, "unit": "cm" }]
+    },
+    {
+      "patterns": ["wider shoulders", "drop shoulder slightly"],
+      "operations": [{ "rule": "change_shoulder_width", "amount": 2, "unit": "cm" }]
+    },
+    {
+      "patterns": ["narrower shoulders"],
+      "operations": [{ "rule": "change_shoulder_width", "amount": -1.5, "unit": "cm" }]
+    },
+    {
+      "patterns": ["higher armhole", "tighter armhole"],
+      "operations": [{ "rule": "adjust_armhole_depth", "amount": -1, "unit": "cm" }]
+    },
+    {
+      "patterns": ["lower armhole", "looser underarm"],
+      "operations": [{ "rule": "adjust_armhole_depth", "amount": 1.5, "unit": "cm" }]
+    }
+  ],
+
+  "sleeve_patterns": [
+    {
+      "patterns": ["slightly shorter sleeves"],
+      "operations": [{ "rule": "change_sleeve_length", "amount": -2, "unit": "cm" }]
+    },
+    {
+      "patterns": ["shorten the sleeves"],
+      "operations": [{ "rule": "change_sleeve_length", "amount": -5, "unit": "cm" }]
+    },
+    {
+      "patterns": ["short sleeves"],
+      "operations": [{ "rule": "change_sleeve_length", "amount": -8, "unit": "cm" }]
+    },
+    {
+      "patterns": ["long sleeves"],
+      "operations": [{ "rule": "change_sleeve_length", "amount": 8, "unit": "cm" }]
+    },
+    {
+      "patterns": ["elbow length sleeves"],
+      "operations": [{ "rule": "change_sleeve_length", "amount": -3, "unit": "cm" }]
+    }
+  ],
+
+  "combined_style_patterns": [
+    {
+      "patterns": ["boxy and slightly cropped"],
+      "fit_preset": "classic_boxy",
+      "operations": [{ "rule": "change_hem_length", "amount": -5, "unit": "cm" }]
+    },
+    {
+      "patterns": ["oversized with a wider neckline"],
+      "fit_preset": "oversized",
+      "operations": [{ "rule": "change_neckline_width", "amount": 2, "unit": "cm" }]
+    },
+    {
+      "patterns": ["cropped boxy with wide neckline"],
+      "fit_preset": "cropped_boxy",
+      "operations": [{ "rule": "change_neckline_width", "amount": 2, "unit": "cm" }]
+    }
+  ]
+}
