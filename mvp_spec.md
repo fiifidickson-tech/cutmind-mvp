@@ -1,279 +1,306 @@
-# **MVP TECH SPEC — Prompt-Based Pattern Editor**
-**Version 1.0 – Internal Draft**
+# CUTMIND – MVP Specification
+
+This document defines the requirements, technical boundaries, and acceptance criteria for the CUTMIND MVP. It serves as the single source of truth for engineers and contributors during early implementation.
+
+The goal of the MVP is to validate two core capabilities:
+
+1. **Interpret natural-language garment adjustments into structured rules**
+2. **Apply those rules to a base SVG pattern and generate a tech pack draft**
+
+The system is not intended to be production-ready or support all garment types at this stage. The focus is correctness, determinism, and demonstrating end-to-end functionality.
 
 ---
 
-# **1. Product Overview**
+## 1. Problem Overview
 
-This MVP allows a user to **edit a sewing pattern using natural language prompts**.
+Pattern-making is complex, slow, and often inaccessible to new designers and entrepreneurs. Even small changes (e.g., “crop the hem by 5 cm,” “widen the sleeves”) require technical skill or paid specialists.
 
-Instead of manually drafting or resizing patterns, the user types prompts such as:
+Manufacturers also require **tech packs**, which further slows down sampling, increases communication overhead, and creates waste during prototyping.
 
-- “Crop the shirt by 14 cm.”
-- “Make it slightly oversized with a wider neckline.”
-- “Make it boxy.”
+The MVP solves this by enabling users to:
 
-The system interprets the text → maps it to a limited set of **predefined pattern operations** → applies geometric transformations → outputs an updated **SVG pattern**.
+- Describe adjustments in **plain language**
+- Receive a **modified pattern** (SVG)
+- Receive a **tech pack draft** summarizing the applied changes
 
-### **Core Proposition**
-> Natural language → Pattern transformation (rule-based)
+This empowers:
 
-This differentiates CUTMIND from PatternFast, Tailornova, CLO3D, Illustrator, and other manual tools.
-
----
-
-# **2. High-Level Architecture**
-
-The MVP consists of **five** main components:
-
-### **1. Web Frontend**
-- Prompt input box  
-- Pattern preview  
-- Summary of interpreted edits  
-
-### **2. Backend API**
-- Orchestrates the entire workflow  
-- Routes prompt + pattern to LLM and geometry engine  
-
-### **3. LLM Interpretation Service**
-- Converts free text → **strict JSON**  
-- Selects rule types + numeric values  
-- Selects ease bundles  
-- Flags unsupported operations  
-- *(No geometry performed here)*  
-
-### **4. Rules Engine**
-- Validates + sanitizes LLM output  
-- Clamps values to safe ranges  
-- Applies ease bundles  
-- Computes transformation parameters  
-- Ensures safe & consistent geometry  
-
-### **5. Pattern Engine**
-- Moves points (translation)  
-- Adjusts curves  
-- Smooths seams  
-- Outputs updated **SVG**  
-- *Does not modify internal markings (darts, notches, etc.)*  
-- *Does not independently redraft sleeves unless included in a preset*  
+- Early-stage clothing founders  
+- Non-technical designers  
+- Even experienced CLO3D or pattern-making users who want faster iteration  
 
 ---
 
-# **3. System Workflow Diagram**
+## 2. MVP Goals
 
+### Primary Goals
+- Convert natural-language instructions into structured rules  
+- Apply those rules to a base T-shirt pattern (SVG)  
+- Generate a **tech pack draft** including:
+  - garment metadata  
+  - list of applied operations  
+  - simplified measurement summaries  
+  - optional notes  
 
-
-[User]
-|
-v
-[Frontend UI]
-|
-v
-[Backend API]
-|
-+--> [LLM Interpretation Service] ----+
-| |
-| Structured JSON (rules + values)
-| v
-+--> [Rules Engine] ---------------> [Pattern Engine]
-|
-v
-Updated SVG Pattern
-|
-v
-[Frontend UI]
-
+### Secondary Goals
+- Expose a simple API for both frontend and external integration  
+- Provide a minimal frontend to test natural-language → output behavior  
+- Maintain deterministic behavior for identical inputs  
 
 ---
 
-# **4. LLM Output Format (Strict JSON)**
+## 3. In-Scope
 
-The LLM must return JSON using **only predefined rule names**:
+The MVP includes:
 
+### Base Asset
+- One garment type: **basic T-shirt block**
+- One file format: **SVG**
+
+### Supported Adjustments
+- Crop hem  
+- Extend/shorten body length  
+- Widen or narrow sleeves  
+- Add or remove ease  
+- Adjust neckline depth  
+
+### Natural-Language → Rule Mapping
+- LLM converts text prompts into structured JSON rules  
+- No direct geometry manipulation by the model  
+
+### Geometry Engine
+- Deterministic vector-based SVG transformations  
+- Path-level adjustments  
+- Output must remain valid SVG  
+
+### Tech Pack Draft Generation
+- JSON structure including:
+  - garment type  
+  - operations applied  
+  - simplified measurement calculations  
+  - optional notes  
+- Intended as a **draft**, not a manufacturing-complete document  
+
+### API Endpoints
+- `/interpret`  
+- `/apply-rules` (returns pattern + techpack)  
+- `/patterns/{id}`  
+
+### Frontend (Minimal)
+- Input field for prompt  
+- Display of modified pattern  
+- Display of tech pack draft  
+
+---
+
+## 4. Out-of-Scope
+
+These are explicitly excluded from the MVP:
+
+### Garment Complexity
+- Multi-piece garments  
+- Pants, jackets, dresses, etc.  
+- DXF / AAMA formats  
+
+### Tech Pack Depth
+- Factory-ready formats  
+- Bill of Materials (BOM)  
+- Stitch type specifications  
+- Grading / multi-size measurement tables  
+- Fabric performance constraints  
+
+### System Behavior
+- Conflict resolution between multiple rules  
+- Real-time editing  
+- 3D visualization  
+- Batch operations  
+- Full measurement validation  
+
+---
+
+## 5. User Stories
+
+### Story 1 — Founder Creating First Garment
+“As a founder, I want to describe how I want a shirt to fit in plain language so I can get a pattern and tech pack draft I can send to a manufacturer.”
+
+### Story 2 — Designer Rapid Iteration
+“As a designer, I want to quickly adjust a base pattern and view the updated measurements without redoing work manually.”
+
+### Story 3 — Technical User Testing Changes
+“As a CLO3D or pattern-making user, I want a fast way to generate pattern variations from prompts.”
+
+---
+
+## 6. High-Level Workflow
+
+1. User selects the base T-shirt pattern  
+2. User enters natural-language instructions  
+3. Backend LLM interprets the prompt  
+4. Rules engine validates and structures rule outputs  
+5. Geometry engine applies rules to SVG  
+6. System calculates simplified measurements  
+7. **Tech pack generator creates a draft**  
+8. Backend returns:
+   - modified SVG  
+   - tech pack draft JSON  
+
+---
+
+## 7. Functional Requirements
+
+### 7.1 Natural-Language Interpretation
+The system must:
+- Accept a text prompt  
+- Return structured rules with numeric values  
+- Handle combined operations (e.g., “crop 5 cm and widen sleeves 3 cm”)  
+
+### 7.2 Rule Validation
+The system must:
+- Validate that each rule is supported  
+- Reject unsupported operations  
+- Ensure numeric values are present  
+
+### 7.3 Geometry Engine
+The engine must:
+- Apply rule transformations to the SVG  
+- Produce a valid SVG output  
+- Remain deterministic  
+
+### 7.4 Tech Pack Draft Generator
+The system must:
+- Convert applied rules into structured metadata  
+- Calculate simplified measurement changes  
+- Output JSON in a consistent schema  
+- Indicate clearly that it is a **draft** requiring review  
+
+### 7.5 API Layer
+- All endpoints must return JSON  
+- Errors must follow the standardized format  
+
+---
+
+## 8. API Requirements
+
+### `/interpret`
+- Input: text prompt  
+- Output: structured rule JSON  
+
+### `/apply-rules`
+- Input: pattern ID + rules  
+- Output:
+  - modified SVG  
+  - tech pack JSON  
+
+### `/patterns/{id}`
+- Returns base patterns  
+
+### Error Format
 ```json
 {
-  "fit_preset": "cropped_boxy",
-  "operations": [
-    { "rule": "change_hem_length", "amount": -14, "unit": "cm" },
-    { "rule": "change_shoulder_width", "amount": 1, "unit": "cm" },
-    { "rule": "change_neckline_width", "amount": 1.5, "unit": "cm" }
-  ],
-  "unsupported_requests": [
-    "add ruffles",
-    "make it backless"
-  ]
+  "error": "string",
+  "details": {}
 }
+```
 
+---
 
-The LLM is not allowed to invent new rule names.
+## 9. Tech Pack Draft Specification
 
-5. Supported Rule Set (MVP v1)
-
-These are the only valid operations for V1.
-
-Pattern Transformation Rules
-
-change_hem_length
-
-change_sleeve_length
-
-change_shoulder_width
-
-change_neckline_width
-
-change_neckline_depth
-
-adjust_armhole_depth
-
-apply_fit_preset
-
-Ease Presets (10 Bundles)
-
-Skin-tight
-
-Tailored/Fitted
-
-Standard fit
-
-Relaxed fit
-
-Classic Boxy
-
-Oversized
-
-Super Oversized
-
-Cropped Fitted
-
-Cropped Boxy
-
-Athleisure
-
-6. Rules Engine Logic
-Responsibilities
-
-Validate LLM-generated instructions
-
-Normalize units
-
-Clamp unsafe values
-
-Apply ease bundle rules
-
-Compute final parameters
-
-Maintain geometric stability
-
-Prevent impossible shapes (e.g., negative armholes)
-
-Example Pseudocode
-function validate(instructions) {
-    preset = instructions.fit_preset;
-    ops = instructions.operations;
-
-    // 1. Apply ease preset
-    ease = EaseBundles[preset || "standard"];
-
-    // 2. Normalize units to cm
-    for (op of ops) {
-        op.amount = convertToCm(op.amount);
-    }
-
-    // 3. Safety clamps
-    for (op of ops) {
-        if (op.rule === "change_hem_length") {
-            op.amount = clamp(op.amount, -25, 25);
-        }
-    }
-
-    return { ease, ops };
+### Required Fields
+```json
+{
+  "garment_type": "tshirt",
+  "operations_applied": [],
+  "measurements": {},
+  "notes": "string or null"
 }
+```
 
-7. Pattern Engine Logic (Geometry)
+### Measurement Rules
+Examples:
+- Cropping hem by 5 cm → body length reduction  
+- Sleeve widening → updated sleeve width summary  
 
-The T-shirt block is represented using:
+### Notes
+- No grading  
+- No BOM  
+- No fabric requirements  
+- No production tolerances  
 
-Named landmarks
+---
 
-SVG paths
+## 10. Non-Functional Requirements
 
-Metadata for:
+### Determinism
+- Same input → same output every time  
 
-hem
+### Performance
+- MVP acceptable: < 3 seconds per request  
 
-armhole
+### Reliability
+- API must not crash on malformed instructions  
+- All errors must be descriptive and consistent  
 
-side seam
+### Maintainability
+- Code must be modular:  
+  - rules engine  
+  - geometry engine  
+  - tech pack generator  
+  - LLM interpretation layer  
 
-neckline
+---
 
-shoulder
+## 11. Open Questions
 
-Example: change_hem_length
-for (piece of [front, back]) {
-    for (point of piece.hem_line) {
-        point.y -= amount_cm;
-    }
-    blendLowerSideSeam(piece.side_seam, newHemPosition);
-}
+### Pattern
+- Should measurements be stored or computed on the fly?  
 
-Example: change_shoulder_width
-for (piece of [front, back]) {
-    for (point of piece.shoulder_line) {
-        point.x += amount_cm / 2;
-    }
-    smoothCurve(piece.armhole_curve);
-}
+### Tech Pack
+- Should we allow user metadata (fabric, fit notes)?  
+- Should we support exporting drafts to HTML/PDF?
 
-Output
+### Rules
+- Should combined operations be sequential or merged?
 
-Updated SVG file
+### Future
+- Should users upload their own base patterns?
 
-(PDF optional in future versions)
+---
 
-Grainlines & notches preserved
+## 12. Future Extensions (Not for MVP)
 
-8. User Flow (Frontend)
+- Multi-piece garment support  
+- DXF import/export  
+- Full tech pack generator with BOM + grading  
+- Real-time editing interface  
+- Fabric-aware adjustments  
+- Full LLM garment creation model  
+- 3D viewer  
+- Design assistant mode  
 
-User selects base T-shirt pattern
+---
 
-User types a prompt
+## 13. Acceptance Criteria
 
-LLM produces a structured summary
+The MVP is considered complete when:
 
-Backend updates pattern
+- A user inputs natural-language adjustments  
+- `/interpret` returns valid structured rules  
+- `/apply-rules` returns:
+  - a modified SVG  
+  - a valid tech pack JSON with measurement changes  
+- The modified SVG reflects the rule inputs deterministically  
+- The tech pack draft follows the defined schema  
+- The frontend can display:
+  - input field  
+  - resulting SVG  
+  - resulting tech pack JSON  
+- All out-of-scope features are clearly excluded  
 
-User previews or downloads the new SVG
+---
 
-User optionally applies more edits
+## 14. Versioning
 
-9. Engineering Constraints (MVP Reality Check)
+This MVP spec is v0.1.  
+Any future changes must be documented and versioned.
 
-Only 1 garment (T-shirt block)
-
-Only 6–8 rule types
-
-Only SVG output required
-
-No generative geometry
-
-No grading
-
-No 3D simulation
-
-No multi-garment dependencies
-
-Expected dev time:
-8–12 weeks with 1–2 engineers.
-
-10. Summary — Why This MVP Is Feasible
-✔ AI handles interpretation, not geometry
-✔ Geometry engine is rule-based and deterministic
-✔ Narrow scope = predictable engineering
-✔ Single-garment support massively reduces complexity
-✔ Existing formats (SVG) require no new standards
-✔ V1 focuses on stability over visual fidelity
-
-This MVP proves the core differentiator of CUTMIND:
-
-AI-powered natural-language editing of sewing patterns.
