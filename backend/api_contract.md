@@ -1,7 +1,7 @@
 # api_contract.md
 
 ## Purpose
-This file defines the backend API contracts for the MVP.
+This file defines the backend API contracts for the MVP.  
 It ensures engineers clearly understand the expected request/response formats before implementation begins.
 
 The API contract acts as a shared agreement between:
@@ -40,7 +40,7 @@ Converts natural-language instructions into structured rule JSON.
 ## POST `/apply-rules`
 
 ### Description
-Applies structured rules to the base SVG pattern.
+Applies structured rules to the base SVG pattern and returns both the modified pattern and a tech pack draft.
 
 ### Request (JSON)
 ```json
@@ -55,7 +55,18 @@ Applies structured rules to the base SVG pattern.
 ### Response (JSON)
 ```json
 {
-  "modified_pattern_svg": "<svg>...</svg>"
+  "modified_pattern_svg": "<svg>...</svg>",
+  "techpack": {
+    "garment_type": "tshirt",
+    "pattern_id": "tshirt_block_v1",
+    "operations_applied": [
+      { "operation": "crop_hem", "value_cm": 5 }
+    ],
+    "measurements": {
+      "body_length_change_cm": -5
+    },
+    "notes": "This is a draft tech pack. Manufacturer review required."
+  }
 }
 ```
 
@@ -68,6 +79,11 @@ Returns the raw SVG pattern asset.
 
 ### Response
 - SVG string
+
+Example:
+```text
+<svg>...</svg>
+```
 
 ---
 
@@ -86,3 +102,4 @@ Returns the raw SVG pattern asset.
 - All API responses must be stable and documented.  
 - Any future changes require updating this file.  
 - Request/response examples must be kept in sync with backend logic.  
+- The tech pack returned by `/apply-rules` is a **draft** and must be reviewed before use in manufacturing.
