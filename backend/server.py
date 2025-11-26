@@ -5,9 +5,9 @@ server.py
 Purpose:
 - This will become the main backend server entrypoint.
 - It will initialize the FastAPI application, load configuration,
-  anand register all API routes.
+  and register all API routes.
 - During the MVP, this file will expose endpoints for:
-    - /interperet (LLM → structured rule JSON)
+    - /interpret (LLM → structured rule JSON)
     - /apply-rules (apply geometry operations to SVG)
 - Eventually this may also handle middleware, logging, and CORS settings.
 
