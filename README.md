@@ -2,6 +2,8 @@
 
 CUTMIND is an AI-assisted pattern transformation system. It interprets natural-language instructions (e.g., “crop the hem by 5 cm,” “add 3 cm ease to the chest,” “make sleeves oversized”) and applies structured geometry operations to pattern files.
 
+In addition to generating modified patterns, CUTMIND also produces a **tech pack draft** based on the applied adjustments. This provides founders and new designers with a ready-to-review document they can send to manufacturers. The tech pack is intentionally lightweight for the MVP and includes garment metadata, applied operations, and simplified measurements. Final manufacturing review is still expected, but this feature significantly accelerates early sampling and reduces the need for technical design expertise.
+
 This repository contains the current specification and initial structure for the MVP. Implementation has not yet begun; this repo establishes the technical foundation for development.
 
 ---
@@ -16,16 +18,17 @@ A clear explanation of each folder and its purpose.
 - LLM interpretation endpoint  
 - Rules engine  
 - Pattern geometry engine (operating on SVG)  
+- **Tech pack generation module (techpack_generator.py)**  
 - HTTP API for frontend and external clients  
 
 ### `/frontend`
-(Currently unimplemented.) Will contain the user interface for testing natural-language adjustments and previewing pattern output.
+(Currently unimplemented.) Will contain the user interface for testing natural-language adjustments, previewing pattern output, and viewing the tech pack draft.
 
 ### `/config`
-Contains configuration files, including mappings between natural-language terms and engineered operations.
+Contains configuration files, including mappings between natural-language terms and engineered operations. Future versions may include tech pack templates.
 
 ### `/pattern`
-Base pattern assets (e.g., the T-shirt block SVG), which serve as input to the geometry engine.
+Base pattern assets (e.g., the T-shirt block SVG), which serve as input to the geometry and tech pack engines.
 
 ### `mvp_spec.md`
 Full MVP specification, including requirements, constraints, and operational rules.
@@ -39,11 +42,14 @@ Documentation for contributors, environment setup guidelines, and project conven
 
 CUTMIND’s MVP validates whether natural-language adjustments can be reliably converted into structured rules, and whether those rules can be applied deterministically to an SVG pattern.
 
+The MVP also validates whether a **tech pack draft** can be generated from the modified pattern and applied rules, giving users (especially early-stage founders) a fast way to communicate manufacturing intent.
+
 ### High-level goals:
 - Demonstrate natural-language → structured rule translation  
 - Demonstrate deterministic geometry transformations  
 - Provide a minimal UI for testing  
 - Enable further expansion toward multi-garment capabilities  
+- **Generate a basic tech pack draft for manufacturer handoff**  
 
 ---
 
@@ -115,7 +121,7 @@ This repository is a structural and specification scaffold. Implementation will 
 
 ## 6. Scope of the MVP
 
-The MVP is intentionally narrow. Its purpose is to validate whether natural-language instructions can be translated into consistent, reproducible pattern modifications using a rules-based geometry engine.
+The MVP is intentionally narrow. Its purpose is to validate whether natural-language instructions can be translated into consistent, reproducible pattern modifications using a rules-based geometry engine and whether a basic tech pack draft can be generated from those modifications.
 
 ### In-Scope
 - One garment type: basic T-shirt block  
@@ -128,6 +134,10 @@ The MVP is intentionally narrow. Its purpose is to validate whether natural-lang
   - Extend or shorten body length  
 - Natural-language → structured JSON mapping  
 - Deterministic geometry transformations  
+- Generation of a **tech pack draft**, including:
+  - garment metadata  
+  - applied operations  
+  - simplified measurement summaries  
 - Support for single or simple combined adjustments  
 
 ### Out-of-Scope
@@ -137,6 +147,10 @@ The MVP is intentionally narrow. Its purpose is to validate whether natural-lang
 - Fabric or 3D simulation  
 - Real-time editing  
 - Batch operations  
+- Factory-ready or region-specific tech pack formats  
+- Bill of Materials (BOM)  
+- Multi-size measurement tables  
+- Guarantees that the tech pack draft is production-ready without expert review  
 
 ---
 
@@ -160,6 +174,11 @@ The MVP is intentionally narrow. Its purpose is to validate whether natural-lang
 - Pure vector transformations.  
 - All changes must be traceable and reversible.  
 - Limited to the T-shirt block asset.
+
+### Tech Pack Generator
+- Produces a structured JSON draft only.  
+- Measurements are simplified and derived from applied rules.  
+- Not intended to replace full technical design review.
 
 ### Frontend
 - Thin client.  
@@ -196,7 +215,7 @@ Converts natural-language instructions into structured rules.
 ---
 
 ### POST `/apply-rules`
-Applies structured rules to a base pattern.
+Applies structured rules to a base pattern and returns both the modified SVG and a tech pack draft.
 
 **Request**
 ```json
@@ -211,7 +230,17 @@ Applies structured rules to a base pattern.
 **Response**
 ```json
 {
-  "modified_pattern_svg": "<svg>...</svg>"
+  "modified_pattern_svg": "<svg>...</svg>",
+  "techpack": {
+    "garment_type": "tshirt",
+    "operations_applied": [
+      { "operation": "crop_hem", "value_cm": 5 }
+    ],
+    "measurements": {
+      "body_length_change_cm": -5
+    },
+    "notes": "This is a draft tech pack. Manufacturer review required."
+  }
 }
 ```
 
@@ -272,6 +301,11 @@ Returns pattern SVG assets.
 - How should ambiguous instructions be handled?  
 - Should the LLM infer numeric values?
 
+### Tech Pack
+- How detailed should the measurement summaries be?  
+- Should the tech pack draft be downloadable as HTML/PDF?  
+- Should users provide optional metadata (fabric, size, fit notes)?
+
 ### Frontend
 - Should a before/after preview exist?  
 - Should pattern uploading be allowed?
@@ -302,4 +336,3 @@ This repository is private and proprietary.
 All rights reserved.
 Unauthorized distribution or copying is prohibited.
 ```
-
