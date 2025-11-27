@@ -260,7 +260,7 @@ Returns raw SVG for:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {}
 }
 ```
