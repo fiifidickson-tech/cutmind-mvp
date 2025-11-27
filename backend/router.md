@@ -5,9 +5,9 @@ The routing layer connects HTTP requests → interpretation layer → rules engi
 
 CUTMIND MVP exposes **three endpoints**:
 
-1. `POST /interpret`
-2. `POST /apply-rules`
-3. `GET /patterns/{id}`
+1. `POST /interpret`  
+2. `POST /apply-rules`  
+3. `GET /patterns/{id}`  
 
 No additional routes are allowed during the MVP.
 
@@ -15,18 +15,20 @@ No additional routes are allowed during the MVP.
 
 # 1. General Routing Requirements
 
-- Must use **FastAPI**.
-- Each endpoint must return JSON or SVG as specified.
+- Must use **FastAPI**.  
+- Each endpoint must return JSON or SVG as specified.  
 - All errors follow the unified error format:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "some_error_code",
   "details": {}
 }
 ```
 
-- All endpoints must be registered in `server.py`.
+- `error` must be a short machine-readable string.  
+- `details` must always be an object.  
+- All endpoints must be registered in `server.py`.  
 - Router logic must remain thin — no heavy processing in routing.
 
 ---
@@ -37,9 +39,9 @@ No additional routes are allowed during the MVP.
 Convert natural-language text into structured rule JSON.
 
 ## Flow
-1. Receive `prompt` (string).
-2. Pass text to `interpretation.py`.
-3. Validate that resulting rules match MVP format.
+1. Receive `prompt` (string).  
+2. Pass text to `interpretation.py`.  
+3. Validate that resulting rules match MVP format.  
 4. Return structured rule JSON.
 
 ## Request Body
@@ -60,15 +62,22 @@ Convert natural-language text into structured rule JSON.
 ```
 
 ## Failure Cases
-- LLM returns invalid structure
-- Unsupported operations
-- Missing numeric values
+- LLM returns invalid structure  
+- Unsupported operations  
+- Missing numeric values  
 
-Must return:
+On failure, the route must return the unified error format.  
+Typical error codes:
+
+- `"unsupported_instruction"`
+- `"invalid_rule_format"`
+- `"internal_error"`
+
+Example error response:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "unsupported_instruction",
   "details": {}
 }
 ```
@@ -86,10 +95,10 @@ Valid `pattern_id` values:
 - `crop_top`
 
 ## Flow
-1. Validate `pattern_id`.
-2. Validate each rule.
-3. Load base SVG through `pattern_loader.py`.
-4. Pass SVG + rules to `geometry_engine.py`.
+1. Validate `pattern_id`.  
+2. Validate each rule.  
+3. Load base SVG through `pattern_loader.py`.  
+4. Pass SVG + rules to `geometry_engine.py`.  
 5. Return transformed SVG.
 
 ## Request Body
@@ -110,15 +119,23 @@ Valid `pattern_id` values:
 ```
 
 ## Failure Cases
-- Invalid pattern ID
-- Invalid rule structure
-- Geometry transformation failure
+- Invalid pattern ID  
+- Invalid rule structure  
+- Geometry transformation failure  
 
-All failures must return:
+On failure, the route must return the unified error format.  
+Typical error codes:
+
+- `"invalid_pattern_id"`  
+- `"invalid_rule_format"`  
+- `"geometry_application_failed"`  
+- `"internal_error"`
+
+Example error response:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {}
 }
 ```
@@ -136,58 +153,49 @@ Valid IDs:
 - `crop_top`
 
 ## Behavior
-- Load SVG from `/pattern/{id}/front.svg`, `/back.svg`, or `/sleeve.svg`.
+- Load SVG from `/pattern/{id}/front.svg`, `/back.svg`, and `/sleeve.svg`.  
 - If the file or pattern family does not exist → return unified error.
 
-## Example Response
+## Successful Response (raw SVG)
 ```
 <svg>...</svg>
 ```
 
-(This route returns raw SVG, not JSON.)
+## Failure Cases
+
+- `"invalid_pattern_id"`
+
+Example error response:
+
+```json
+{
+  "error": "invalid_pattern_id",
+  "details": {}
+}
+```
 
 ---
 
 # 5. Routing Integration in `server.py`
 
-Example of expected structure:
+Expected structure:
 
 ```python
 from fastapi import FastAPI
-from interpretation import interpret_prompt
-from rules_engine import validate_rules
-from geometry_engine import apply_geometry
-from pattern_loader import load_pattern
+from router import router
 
 app = FastAPI()
-
-@app.post("/interpret")
-def interpret(payload: dict):
-    # Call interpretation layer
-    # Return structured rules
-    pass
-
-@app.post("/apply-rules")
-def apply_rules(payload: dict):
-    # Validate pattern ID
-    # Validate rules
-    # Apply geometry engine
-    # Return modified SVG
-    pass
-
-@app.get("/patterns/{pattern_id}")
-def get_pattern(pattern_id: str):
-    # Return base SVG
-    pass
+app.include_router(router)
 ```
 
-Do NOT implement heavy logic directly in route functions.  
-Use dedicated modules.
+Route handlers should only orchestrate:
+- interpretation → rules validation → geometry engine → response  
+No heavy logic inside routing functions.
 
 ---
 
 # 6. Final Notes
 
-- Router must remain stable for entire MVP.
-- No new routes should be added until MVP is complete.
-- If behavior changes, update `api_contract.md` and this file.
+- Router must remain stable for entire MVP.  
+- No new routes should be added until MVP is complete.  
+- If behavior changes, update `api_contract.md`, `router.md`, and `mvp_spec.md`.
