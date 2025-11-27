@@ -19,7 +19,7 @@ This module is called by the routing layer / server, e.g.:
     validated_rules = validate_rules(rules)
 
 If validation fails, this module raises RuleValidationError, which the router
-must convert into the unified JSON error:
+or server must convert into the unified JSON error:
 
     {
         "error": "invalid_rule_format",
@@ -41,7 +41,7 @@ class RuleValidationError(Exception):
     """
     Raised when one or more rules fail validation.
 
-    The router must catch this exception and return an API error with:
+    The router/server must catch this exception and return an API error with:
         "error": "invalid_rule_format"
     using the unified error format.
     """
