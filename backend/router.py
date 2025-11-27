@@ -2,8 +2,8 @@
 router.py
 
 Purpose:
-- This module will define and register all HTTP routes for the CUTMIND backend.
-- It integrates the interpretation, rules engine, geometry engine, tech pack generator,
+- Define and register all HTTP routes for the CUTMIND backend.
+- Integrate the interpretation, rules engine, geometry engine,
   and pattern loader into a single API surface.
 
 Responsibilities:
@@ -15,9 +15,8 @@ Responsibilities:
     - interpretation.py
     - rules_engine.py
     - geometry_engine.py
-    - techpack_generator.py
     - pattern_loader.py
-- Enforce the API contracts defined in api_contract.md.
+- Enforce the API contracts defined in api_contract.md and mvp_spec.md.
 
 Non-responsibilities (handled elsewhere):
 - App creation and startup → server.py
@@ -32,10 +31,9 @@ Implementation Status:
 # from fastapi import APIRouter, HTTPException
 # from typing import Any, Dict
 #
-# from .interpretation import Interpreter
+# from .interpretation import Interpreter, InterpretationError
 # from .rules_engine import validate_rules, RuleValidationError
 # from .geometry_engine import apply_operations, GeometryEngineError
-# from .techpack_generator import generate_techpack
 # from .pattern_loader import load_pattern_svg, PatternNotFoundError
 #
 # router = APIRouter()
@@ -51,10 +49,20 @@ Implementation Status:
 #     """
 #     prompt = payload.get("prompt")
 #     if not prompt:
-#         raise HTTPException(status_code=400, detail={"error": "Missing 'prompt' field."})
+#         # Unified error format
+#         raise HTTPException(
+#             status_code=400,
+#             detail={"error": "invalid_rule_format", "details": {}},
+#         )
 #
-#     # TODO: hook into interpretation.py once implemented
-#     rules = interpreter.parse_prompt(prompt)
+#     try:
+#         rules = interpreter.parse_prompt(prompt)
+#     except InterpretationError:
+#         raise HTTPException(
+#             status_code=400,
+#             detail={"error": "unsupported_instruction", "details": {}},
+#         )
+#
 #     return {"rules": rules}
 #
 #
@@ -63,25 +71,39 @@ Implementation Status:
 #     """
 #     Placeholder route:
 #     - Accepts pattern_id and rules.
-#     - Returns modified SVG and a tech pack draft.
+#     - Returns modified SVG only, as defined in api_contract.md.
 #     """
 #     pattern_id = payload.get("pattern_id")
 #     rules = payload.get("rules", [])
 #
 #     if not pattern_id:
-#         raise HTTPException(status_code=400, detail={"error": "Missing 'pattern_id' field."})
+#         raise HTTPException(
+#             status_code=400,
+#             detail={"error": "invalid_pattern_id", "details": {}},
+#         )
 #
 #     try:
 #         validated_rules = validate_rules(rules)
 #         base_svg = load_pattern_svg(pattern_id)
 #         modified_svg = apply_operations(base_svg, validated_rules)
-#         techpack = generate_techpack(pattern_id, validated_rules)
-#     except (RuleValidationError, GeometryEngineError, PatternNotFoundError) as e:
-#         raise HTTPException(status_code=400, detail={"error": str(e), "details": {}})
+#     except RuleValidationError:
+#         raise HTTPException(
+#             status_code=400,
+#             detail={"error": "invalid_rule_format", "details": {}},
+#         )
+#     except PatternNotFoundError:
+#         raise HTTPException(
+#             status_code=404,
+#             detail={"error": "invalid_pattern_id", "details": {}},
+#         )
+#     except GeometryEngineError:
+#         raise HTTPException(
+#             status_code=400,
+#             detail={"error": "geometry_application_failed", "details": {}},
+#         )
 #
 #     return {
 #         "modified_pattern_svg": modified_svg,
-#         "techpack": techpack,
 #     }
 #
 #
@@ -93,8 +115,11 @@ Implementation Status:
 #     """
 #     try:
 #         svg = load_pattern_svg(pattern_id)
-#     except PatternNotFoundError as e:
-#         raise HTTPException(status_code=404, detail={"error": str(e), "details": {}})
+#     except PatternNotFoundError:
+#         raise HTTPException(
+#             status_code=404,
+#             detail={"error": "invalid_pattern_id", "details": {}},
+#         )
 #
 #     return svg
 #
