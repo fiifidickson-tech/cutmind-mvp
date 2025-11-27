@@ -53,10 +53,12 @@ Returned when:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "unsupported_instruction",
   "details": {}
 }
 ```
+
+Common error codes: `"unsupported_instruction"`, `"invalid_rule_format"`, `"internal_error"`.
 
 ---
 
@@ -96,10 +98,13 @@ Returned if:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {}
 }
 ```
+
+Common error codes: `"invalid_pattern_id"`, `"invalid_rule_format"`,
+`"geometry_application_failed"`, `"internal_error"`.
 
 ---
 
@@ -123,7 +128,7 @@ Raw SVG, **not JSON**:
 ## Error Response (JSON)
 ```json
 {
-  "error": "Invalid pattern ID",
+  "error": "invalid_pattern_id",
   "details": {}
 }
 ```
@@ -136,10 +141,17 @@ ALL endpoints must return errors with this structure:
 
 ```json
 {
-  "error": "Some error message",
+  "error": "some_error_code",
   "details": {}
 }
 ```
+
+Typical error codes (shared with `mvp_spec.md`):
+- "`unsupported_instruction`"
+- "`invalid_rule_format`"
+- "`invalid_pattern_id`"
+- "`geometry_application_failed`"
+- "`internal_error`"
 
 ### Rules:
 - `"error"` must always be a short machine-readable string.  
