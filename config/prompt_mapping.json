@@ -43,11 +43,45 @@
       "value_required": true
     },
 
+    "adjust_body_length": {
+      "synonyms": [
+        "adjust the body length",
+        "change the body length",
+        "adjust the length of the shirt"
+      ],
+      "unit": "cm",
+      "value_required": true
+    },
+
+    "add_ease_body": {
+      "synonyms": [
+        "add ease",
+        "make it looser",
+        "more relaxed fit",
+        "more oversized",
+        "more room around the chest",
+        "more room around the body"
+      ],
+      "unit": "cm",
+      "value_required": true
+    },
+
+    "remove_ease_body": {
+      "synonyms": [
+        "remove ease",
+        "make it more fitted",
+        "make it tighter",
+        "take out extra room",
+        "less room around the body"
+      ],
+      "unit": "cm",
+      "value_required": true
+    },
+
     "widen_sleeve": {
       "synonyms": [
         "widen the sleeves",
         "make the sleeves wider",
-        "make the sleeves a bit wider",
         "loosen the sleeves",
         "more room in the sleeves",
         "oversized sleeves"
@@ -67,16 +101,21 @@
       "value_required": true
     },
 
-    "add_ease_body": {
+    "shorten_sleeve": {
       "synonyms": [
-        "add ease",
-        "make it looser",
-        "more relaxed fit",
-        "more oversized",
-        "oversized",
-        "very oversized",
-        "more room around the chest",
-        "more room around the body"
+        "shorten the sleeves",
+        "make the sleeves shorter",
+        "crop the sleeves"
+      ],
+      "unit": "cm",
+      "value_required": true
+    },
+
+    "extend_sleeve": {
+      "synonyms": [
+        "extend the sleeves",
+        "lengthen the sleeves",
+        "make the sleeves longer"
       ],
       "unit": "cm",
       "value_required": true
