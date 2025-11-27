@@ -31,7 +31,7 @@
       "value_required": true
     },
 
-    "extend_body": {
+    "extend_hem": {
       "synonyms": [
         "extend the hem",
         "extend the shirt",
@@ -47,6 +47,7 @@
       "synonyms": [
         "widen the sleeves",
         "make the sleeves wider",
+        "make the sleeves a bit wider",
         "loosen the sleeves",
         "more room in the sleeves",
         "oversized sleeves"
@@ -72,6 +73,8 @@
         "make it looser",
         "more relaxed fit",
         "more oversized",
+        "oversized",
+        "very oversized",
         "more room around the chest",
         "more room around the body"
       ],
