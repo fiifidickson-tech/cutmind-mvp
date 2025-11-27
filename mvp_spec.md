@@ -105,6 +105,7 @@ The LLM is responsible only for generating **structured rule JSON**.
 - Size generation
 
 The LLM should respond “unsupported_instruction” (via error) if an instruction is not in-scope.
+If an instruction is out of scope, the LLM must return an error with the code "unsupported_instruction".
 
 ---
 
@@ -124,7 +125,7 @@ It must:
 Return unified error:
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {}
 }
 ```
@@ -176,6 +177,8 @@ Generates rule JSON.
 }
 ```
 
+On failure, this endpoint must return the unified error format. Common error codes: "unsupported_instruction", "invalid_rule_format", "internal_error".
+
 ---
 
 ## 7.2 POST `/apply-rules`
@@ -198,6 +201,8 @@ Applies rule JSON to a chosen pattern.
 }
 ```
 
+On failure, this endpoint must return the unified error format. Common error codes: "invalid_pattern_id", "geometry_application_failed", "internal_error".
+
 ---
 
 ## 7.3 GET `/patterns/{id}`
@@ -207,6 +212,8 @@ Valid IDs:
 - tshirt
 - long_sleeve
 - crop_top
+
+Errors must use the unified error format. Common error code: "invalid_pattern_id".
 
 ---
 
@@ -240,10 +247,10 @@ Valid IDs:
 
 # 10. Error Handling
 
-All endpoints must return:
+All endpoints must return errors using this structure:
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "some_error_code",
   "details": {}
 }
 ```
@@ -253,7 +260,14 @@ Errors include:
 - Unsupported operations  
 - Non-numeric values  
 - Invalid pattern IDs  
-- LLM interpretation failures  
+- LLM interpretation failures
+  
+Typical error codes:
+- unsupported_instruction
+- invalid_rule_format
+- invalid_pattern_id
+- geometry_application_failed
+- internal_error
 
 ---
 
