@@ -25,6 +25,11 @@ into a unified JSON error:
         "error": "Invalid rule format",
         "details": {}
     }
+
+This file must stay in sync with:
+- mvp_spec.md
+- api_contract.md
+- config/prompt_mapping.json
 """
 
 from __future__ import annotations
@@ -35,27 +40,15 @@ from typing import Any, Dict, List
 # Allowed Operations (MVP)
 # ---------------------------------------------------------------------------
 
-# These operations must stay in sync with:
-# - mvp_spec.md
-# - api_contract.md
-# - config/prompt_mapping.json
+# These operation names must match config/prompt_mapping.json → "operations" keys.
 ALLOWED_OPERATIONS = {
-    # Body length / hem
     "crop_hem",
-    "extend_hem",
-    "adjust_body_length",
-    # Body ease
-    "add_ease_body",
-    "remove_ease_body",
-    # Sleeves
+    "extend_body",
     "widen_sleeve",
     "narrow_sleeve",
-    "shorten_sleeve",
-    "extend_sleeve",
-    "add_ease_sleeve",
-    # Neckline
-    "raise_neckline",
-    "lower_neckline",
+    "add_ease",
+    "remove_ease",
+    "adjust_neckline_depth",
 }
 
 
