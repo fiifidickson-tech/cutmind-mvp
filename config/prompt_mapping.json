@@ -5,15 +5,15 @@
   "garment_type": {
     "tshirt": {
       "aliases": ["t-shirt", "tee", "tee shirt", "shirt"],
-      "default_pattern_id": "tshirt_block_v1"
+      "default_pattern_id": "tshirt"
     },
     "long_sleeve": {
       "aliases": ["long sleeve", "long-sleeve tee", "long-sleeve shirt"],
-      "default_pattern_id": "long_sleeve_block_v1"
+      "default_pattern_id": "long_sleeve"
     },
     "crop_top": {
       "aliases": ["crop top", "cropped tee", "cropped shirt"],
-      "default_pattern_id": "crop_top_block_v1"
+      "default_pattern_id": "crop_top"
     }
   },
 
@@ -27,8 +27,6 @@
         "make it shorter",
         "make the shirt cropped"
       ],
-      "targets": ["body_length"],
-      "default_direction": "shorten",
       "unit": "cm",
       "value_required": true
     },
@@ -41,8 +39,6 @@
         "make it longer",
         "add length to the body"
       ],
-      "targets": ["body_length"],
-      "default_direction": "lengthen",
       "unit": "cm",
       "value_required": true
     },
@@ -55,8 +51,6 @@
         "more room in the sleeves",
         "oversized sleeves"
       ],
-      "targets": ["sleeve_width"],
-      "default_direction": "widen",
       "unit": "cm",
       "value_required": true
     },
@@ -68,13 +62,11 @@
         "tighten the sleeves",
         "more fitted sleeves"
       ],
-      "targets": ["sleeve_width"],
-      "default_direction": "narrow",
       "unit": "cm",
       "value_required": true
     },
 
-    "add_ease": {
+    "add_ease_body": {
       "synonyms": [
         "add ease",
         "make it looser",
@@ -83,35 +75,35 @@
         "more room around the chest",
         "more room around the body"
       ],
-      "targets": ["chest_width", "body_width"],
-      "default_direction": "widen",
       "unit": "cm",
       "value_required": true
     },
 
-    "remove_ease": {
+    "add_ease_sleeve": {
       "synonyms": [
-        "remove ease",
-        "make it more fitted",
-        "make it tighter",
-        "slim fit",
-        "take out extra room"
+        "add ease to the sleeves",
+        "loosen the sleeves a bit",
+        "more room in the sleeves"
       ],
-      "targets": ["chest_width", "body_width"],
-      "default_direction": "narrow",
       "unit": "cm",
       "value_required": true
     },
 
-    "adjust_neckline_depth": {
+    "raise_neckline": {
+      "synonyms": [
+        "raise the neckline",
+        "make the neckline higher"
+      ],
+      "unit": "cm",
+      "value_required": true
+    },
+
+    "lower_neckline": {
       "synonyms": [
         "lower the neckline",
-        "raise the neckline",
         "deepen the neckline",
-        "make the neckline higher",
-        "change the neckline depth"
+        "make the neckline lower"
       ],
-      "targets": ["neckline_depth"],
       "unit": "cm",
       "value_required": true
     }
@@ -131,64 +123,46 @@
 
   "fit_keywords": {
     "oversized": {
-      "operations": ["add_ease"],
-      "default_values": {
-        "chest_width": 5,
-        "body_width": 5
-      }
+      "operation": "add_ease_body",
+      "default_cm": 5
     },
     "relaxed": {
-      "operations": ["add_ease"],
-      "default_values": {
-        "chest_width": 3,
-        "body_width": 3
-      }
+      "operation": "add_ease_body",
+      "default_cm": 3
     },
     "fitted": {
-      "operations": ["remove_ease"],
-      "default_values": {
-        "chest_width": 3,
-        "body_width": 3
-      }
+      "operation": "add_ease_body",
+      "default_cm": -3
     },
     "cropped": {
-      "operations": ["crop_hem"],
-      "default_values": {
-        "body_length": 5
-      }
+      "operation": "crop_hem",
+      "default_cm": 5
     }
   },
 
   "examples": [
     {
-      "prompt": "make it a cropped oversized tee",
+      "prompt": "shorten the shirt by 3 cm and make the sleeves a bit wider",
       "interpreted": {
-        "garment_type": "tshirt",
         "operations": [
-          {
-            "operation": "crop_hem",
-            "value_cm": 5
-          },
-          {
-            "operation": "add_ease",
-            "value_cm": 5
-          }
+          { "operation": "crop_hem", "value_cm": 3 },
+          { "operation": "widen_sleeve", "value_cm": 3 }
         ]
       }
     },
     {
-      "prompt": "shorten the shirt by 3 cm and make the sleeves a bit wider",
+      "prompt": "make it very oversized",
       "interpreted": {
-        "garment_type": "tshirt",
         "operations": [
-          {
-            "operation": "crop_hem",
-            "value_cm": 3
-          },
-          {
-            "operation": "widen_sleeve",
-            "value_cm": 2
-          }
+          { "operation": "add_ease_body", "value_cm": 7 }
+        ]
+      }
+    },
+    {
+      "prompt": "lower the neckline by 2 cm",
+      "interpreted": {
+        "operations": [
+          { "operation": "lower_neckline", "value_cm": 2 }
         ]
       }
     }
