@@ -53,7 +53,7 @@ All adjustments apply identically across the 3 block families.
 
 ## 3.1 Body Adjustments
 - **crop_hem** (negative length change)
-- **extend_body** (positive length change)
+- **extend_hem** (positive length change)
 - **adjust_body_length** (generalized version, in cm)
 - **add_ease_body**
 - **remove_ease_body**
