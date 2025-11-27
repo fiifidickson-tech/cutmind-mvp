@@ -1,3 +1,8 @@
+Here’s the **fixed `router.py`** aligned with your current MVP spec, `interpretation.py`, `rules_engine.py`, `geometry_engine.py`, and `api_contract.md`.
+
+You can paste this **directly** over the existing file.
+
+```python
 """
 router.py
 
@@ -31,13 +36,12 @@ Implementation Status:
 # from fastapi import APIRouter, HTTPException
 # from typing import Any, Dict
 #
-# from .interpretation import Interpreter, InterpretationError
+# from .interpretation import interpret_prompt, InterpretationError
 # from .rules_engine import validate_rules, RuleValidationError
-# from .geometry_engine import apply_operations, GeometryEngineError
+# from .geometry_engine import apply_geometry, GeometryEngineError
 # from .pattern_loader import load_pattern_svg, PatternNotFoundError
 #
 # router = APIRouter()
-# interpreter = Interpreter()
 #
 #
 # @router.post("/interpret")
@@ -46,21 +50,30 @@ Implementation Status:
 #     Placeholder route:
 #     - Accepts a "prompt" in the request body.
 #     - Returns structured rules as defined in api_contract.md.
+#     - On error, returns unified error JSON with appropriate error code.
 #     """
 #     prompt = payload.get("prompt")
 #     if not prompt:
-#         # Unified error format
+#         # Unified error format – missing/invalid input
 #         raise HTTPException(
 #             status_code=400,
 #             detail={"error": "invalid_rule_format", "details": {}},
 #         )
 #
 #     try:
-#         rules = interpreter.parse_prompt(prompt)
+#         rules = interpret_prompt(prompt)
 #     except InterpretationError:
+#         # Interpretation failed → unsupported_instruction or invalid_rule_format.
+#         # For MVP scaffold, we treat all interpretation failures as unsupported_instruction.
 #         raise HTTPException(
 #             status_code=400,
 #             detail={"error": "unsupported_instruction", "details": {}},
+#         )
+#     except Exception:
+#         # Catch-all safety net → internal_error
+#         raise HTTPException(
+#             status_code=500,
+#             detail={"error": "internal_error", "details": {}},
 #         )
 #
 #     return {"rules": rules}
@@ -72,6 +85,7 @@ Implementation Status:
 #     Placeholder route:
 #     - Accepts pattern_id and rules.
 #     - Returns modified SVG only, as defined in api_contract.md.
+#     - On error, uses the unified error format with the correct error codes.
 #     """
 #     pattern_id = payload.get("pattern_id")
 #     rules = payload.get("rules", [])
@@ -85,7 +99,7 @@ Implementation Status:
 #     try:
 #         validated_rules = validate_rules(rules)
 #         base_svg = load_pattern_svg(pattern_id)
-#         modified_svg = apply_operations(base_svg, validated_rules)
+#         modified_svg = apply_geometry(base_svg, validated_rules)
 #     except RuleValidationError:
 #         raise HTTPException(
 #             status_code=400,
@@ -101,6 +115,11 @@ Implementation Status:
 #             status_code=400,
 #             detail={"error": "geometry_application_failed", "details": {}},
 #         )
+#     except Exception:
+#         raise HTTPException(
+#             status_code=500,
+#             detail={"error": "internal_error", "details": {}},
+#         )
 #
 #     return {
 #         "modified_pattern_svg": modified_svg,
@@ -112,6 +131,7 @@ Implementation Status:
 #     """
 #     Placeholder route:
 #     - Returns the base SVG for a given pattern_id.
+#     - On error, returns unified error JSON with invalid_pattern_id.
 #     """
 #     try:
 #         svg = load_pattern_svg(pattern_id)
@@ -119,6 +139,11 @@ Implementation Status:
 #         raise HTTPException(
 #             status_code=404,
 #             detail={"error": "invalid_pattern_id", "details": {}},
+#         )
+#     except Exception:
+#         raise HTTPException(
+#             status_code=500,
+#             detail={"error": "internal_error", "details": {}},
 #         )
 #
 #     return svg
@@ -130,3 +155,4 @@ Implementation Status:
 #     Intended to be called from server.py once the backend is implemented.
 #     """
 #     app.include_router(router)
+```
