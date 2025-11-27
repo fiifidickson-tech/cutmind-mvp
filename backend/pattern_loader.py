@@ -1,76 +1,121 @@
 """
 pattern_loader.py
 
+CUTMIND MVP – Pattern Loader
+
 Purpose:
-- This module is responsible for loading base pattern assets (SVG files)
-  from the /pattern directory.
-- It provides a simple interface for retrieving SVG strings by pattern ID.
-
-Responsibilities:
-- Map pattern IDs (e.g., "tshirt_block_v1") to actual SVG files on disk.
-- Read and return SVG content as a string.
-- Raise a clear error if the pattern is missing or unsupported.
-
-Non-responsibilities (handled elsewhere):
-- Geometry mutations → geometry_engine.py
-- HTTP handling → server.py, router.py
-- Tech pack generation → techpack_generator.py
+- Load base SVG pattern assets from the /pattern directory.
+- Provide a simple interface for the geometry engine and API layer.
 
 MVP Scope:
-- Single pattern ID: "tshirt_block_v1".
-- Single SVG source file under /pattern.
+- Three pattern families:
+    - tshirt
+    - long_sleeve
+    - crop_top
+- Each family has three pieces:
+    - front.svg
+    - back.svg
+    - sleeve.svg
 
-Implementation Status:
-- Placeholder only. Currently does not perform real file I/O.
+For now, the public function `load_pattern_svg(pattern_id)` returns the
+SVG for the FRONT piece by default, since `server.py` expects a single
+SVG string. As the geometry engine matures, this can be extended to load
+and combine multiple pieces if needed.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 
 
-class PatternNotFoundError(Exception):
-    """Raised when a requested pattern ID cannot be resolved or loaded."""
-    pass
+# ---------------------------------------------------------------------------
+# Internal Helpers
+# ---------------------------------------------------------------------------
 
 
-def get_pattern_path(pattern_id: str) -> Path:
+def _get_pattern_root() -> Path:
     """
-    Resolve the filesystem path for a given pattern ID.
+    Return the path to the /pattern directory relative to this file.
 
-    In the MVP, this will likely map:
-        "tshirt_block_v1" -> /pattern/tshirt_block_v1.svg
+    Expected project structure:
 
-    :param pattern_id: The identifier for the pattern.
-    :return: Path object pointing to the SVG file.
-    :raises PatternNotFoundError: if the pattern ID is unsupported.
+        /backend
+            pattern_loader.py
+        /pattern
+            /tshirt
+                front.svg
+                back.svg
+                sleeve.svg
+            /long_sleeve
+                front.svg
+                back.svg
+                sleeve.svg
+            /crop_top
+                front.svg
+                back.svg
+                sleeve.svg
     """
-    # Placeholder mapping. This may later be configured or expanded.
-    base_dir = Path(__file__).parent.parent / "pattern"
-
-    if pattern_id == "tshirt_block_v1":
-        return base_dir / "tshirt_block_v1.svg"
-
-    raise PatternNotFoundError(f"Unsupported pattern_id: {pattern_id}")
+    backend_dir = Path(__file__).resolve().parent
+    project_root = backend_dir.parent
+    return project_root / "pattern"
 
 
-def load_pattern_svg(pattern_id: str) -> str:
+def _load_svg_file(path: Path) -> str:
     """
-    Load the SVG for a given pattern ID and return it as a string.
+    Load a single SVG file as a string.
 
-    Expected behavior (once implemented):
-    - Use get_pattern_path() to resolve the filepath.
-    - Read the SVG file from disk.
-    - Return the SVG contents.
-
-    Current placeholder behavior:
-    - Returns a minimal SVG stub instead of reading from disk.
-
-    :param pattern_id: The identifier for the pattern.
-    :return: SVG content as a string.
-    :raises PatternNotFoundError: if the pattern ID is unsupported.
+    Raises FileNotFoundError if the file does not exist.
     """
-    # For now, we validate the ID and return a stub.
-    _ = get_pattern_path(pattern_id)
+    if not path.exists():
+        raise FileNotFoundError(f"SVG file not found: {path}")
 
-    # Placeholder SVG stub (not a real pattern).
-    stub_svg = "<svg><!-- Placeholder SVG for pattern_id='{}' --></svg>".format(pattern_id)
-    return stub_svg
+    return path.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+def load_pattern_svg(pattern_id: str, piece: str = "front") -> str:
+    """
+    Load the SVG for the given pattern family and piece.
+
+    Parameters
+    ----------
+    pattern_id : str
+        One of:
+        - "tshirt"
+        - "long_sleeve"
+        - "crop_top"
+
+    piece : str, optional
+        One of:
+        - "front"
+        - "back"
+        - "sleeve"
+        Defaults to "front" for MVP.
+
+    Returns
+    -------
+    str
+        The raw SVG content as a string.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the requested SVG file does not exist.
+
+    Notes
+    -----
+    - `server.py` currently calls this function with only `pattern_id`,
+      relying on the default piece="front".
+    - The geometry engine can optionally use `piece` to load all three
+      components if needed in future versions.
+    """
+    pattern_root = _get_pattern_root()
+
+    # Construct path: /pattern/{pattern_id}/{piece}.svg
+    svg_path = pattern_root / pattern_id / f"{piece}.svg"
+
+    return _load_svg_file(svg_path)
