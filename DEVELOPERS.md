@@ -220,7 +220,7 @@ Error handling follows unified format:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {}
 }
 ```
@@ -277,7 +277,7 @@ pytest
 Example:
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "invalid_rule_format",
   "details": {
     "operation": "unknown_operation"
   }
