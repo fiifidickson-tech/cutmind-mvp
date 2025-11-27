@@ -6,13 +6,14 @@ All endpoints, request formats, and response formats must remain stable until MV
 The contract ensures consistent communication between:
 - backend developers  
 - frontend developers  
-- anyone integrating with the system  
+- future engineers  
+- third-party integrations  
 
 ---
 
 # 1. Overview of Endpoints
 
-CUTMIND MVP exposes only **three** API endpoints:
+CUTMIND MVP exposes exactly **three** backend endpoints:
 
 1. `POST /interpret`  
 2. `POST /apply-rules`  
@@ -25,7 +26,7 @@ No additional endpoints are allowed during the MVP phase.
 # 2. POST `/interpret`
 
 ## Description
-Converts a natural-language prompt into structured rule JSON.
+Parses a natural-language prompt and turns it into a validated list of structured rules.
 
 ## Request (JSON)
 ```json
@@ -34,7 +35,7 @@ Converts a natural-language prompt into structured rule JSON.
 }
 ```
 
-## Response (JSON)
+## Successful Response (JSON)
 ```json
 {
   "rules": [
@@ -44,11 +45,11 @@ Converts a natural-language prompt into structured rule JSON.
 }
 ```
 
-## Errors
+## Error Response (JSON)
 Returned when:
-- rules are missing
-- value_cm is missing or not numeric
-- operations not supported
+- the prompt cannot be interpreted
+- a rule is malformed
+- the model returns something unstructured
 
 ```json
 {
@@ -62,7 +63,7 @@ Returned when:
 # 3. POST `/apply-rules`
 
 ## Description
-Applies validated rules to a selected base SVG pattern (one of the three block families).  
+Applies validated rules to ONE of the three supported base block families.  
 Returns **only** the transformed SVG.
 
 ### Valid pattern_id values:
@@ -80,18 +81,18 @@ Returns **only** the transformed SVG.
 }
 ```
 
-## Response (JSON)
+## Successful Response (JSON)
 ```json
 {
   "modified_pattern_svg": "<svg>...</svg>"
 }
 ```
 
-## Errors
+## Error Response (JSON)
 Returned if:
-- pattern_id is invalid
-- rule structure is invalid
-- geometry engine fails
+- pattern_id is invalid  
+- a rule is malformed  
+- the geometry engine cannot apply the rule  
 
 ```json
 {
@@ -105,22 +106,21 @@ Returned if:
 # 4. GET `/patterns/{id}`
 
 ## Description
-Returns the raw base SVG for the requested block family.
+Returns the **raw** base SVG for a pattern block family.
 
 ### Valid IDs:
 - `tshirt`
 - `long_sleeve`
 - `crop_top`
 
-## Response
-This endpoint returns raw SVG, not JSON.
+## Successful Response
+Raw SVG, **not JSON**:
 
-Example:
 ```
 <svg>...</svg>
 ```
 
-## Errors
+## Error Response (JSON)
 ```json
 {
   "error": "Invalid pattern ID",
@@ -132,35 +132,29 @@ Example:
 
 # 5. Unified Error Format
 
-All API errors must follow the same structure:
+ALL endpoints must return errors with this structure:
 
 ```json
 {
-  "error": "Invalid rule format",
+  "error": "Some error message",
   "details": {}
 }
 ```
 
-### `error`
-- A stable machine-readable string.
-- Never include stack traces or internal info.
-
-### `details`
-- Optional explanations such as:
-  - `"unsupported_operation"`
-  - `"non_numeric_value"`
-  - `"missing_field"`
-- Should always be an object.
+### Rules:
+- `"error"` must always be a short machine-readable string.  
+- `"details"` must always be an object.  
+- Never return Python stack traces.  
+- Never return raw LLM output on error.
 
 ---
 
 # 6. Stability Requirements
 
-- All endpoints, fields, and response shapes must remain unchanged until MVP completion.  
-- Any change must update:
-  - `api_contract.md`
-  - `router.md`
-  - `DEVELOPERS.md`
-  - `README.md`
+The following files MUST be updated whenever API behavior changes:
+- `api_contract.md`
+- `router.md`
+- `DEVELOPERS.md`
+- `README.md`
 
-Endpoints must remain predictable so frontend, backend, and future engineers can coordinate without ambiguity.
+The API must remain predictable so frontend, backend, and future engineers can coordinate without ambiguity.
