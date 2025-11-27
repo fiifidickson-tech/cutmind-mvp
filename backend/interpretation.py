@@ -13,6 +13,9 @@ MVP Scope:
 - Operation names must match:
     - config/prompt_mapping.json → "operations" keys
     - rules_engine.ALLOWED_OPERATIONS
+- If a prompt cannot be mapped cleanly to one or more valid operations with
+  numeric values, this module must raise InterpretationError so the router can
+  return an "unsupported_instruction" or "invalid_rule_format" error.
 
 Implementation Status:
 - This file currently provides a heuristic, non-LLM implementation so:
@@ -33,6 +36,17 @@ import json
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+
+class InterpretationError(Exception):
+    """
+    Raised when a prompt cannot be mapped to valid MVP rule JSON.
+
+    Typical cases:
+    - No supported operations detected.
+    - Missing numeric values for required operations.
+    - Mapping configuration is missing or unusable.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -61,14 +75,13 @@ def load_prompt_mapping() -> Dict[str, Any]:
     Load prompt mapping configuration from /config/prompt_mapping.json.
 
     The file is expected to define:
-    - garment_type
     - operations
     - intensity_keywords
-    - fit_keywords
     - examples
 
     If the file does not exist or is invalid, returns an empty mapping so that
-    the rest of the system can still run with basic fallback behavior.
+    the rest of the system can still run. However, interpret_prompt will raise
+    InterpretationError if it cannot use the mapping to produce valid rules.
     """
     path = _get_config_path()
     if not path.exists():
@@ -101,8 +114,13 @@ def _extract_numeric_cm(text: str) -> Optional[float]:
 
 def _detect_intensity(text: str, intensity_map: Dict[str, Any]) -> Optional[float]:
     """
-    Detect an intensity keyword (e.g., 'a bit', 'oversized') and return
-    its numeric value, if any.
+    Detect an intensity keyword (e.g., 'a bit') and return its numeric value,
+    if any.
+
+    Note:
+    - This is allowed because it still results in a numeric value_cm.
+    - Style/fit interpretation such as "boxy", "oversized", etc. is out of MVP
+      scope and must not be inferred here.
     """
     for phrase, value in intensity_map.items():
         if phrase in text:
@@ -111,62 +129,6 @@ def _detect_intensity(text: str, intensity_map: Dict[str, Any]) -> Optional[floa
             except (TypeError, ValueError):
                 continue
     return None
-
-
-def _apply_fit_keywords(
-    text: str,
-    fit_keywords: Dict[str, Any],
-) -> List[Dict[str, Any]]:
-    """
-    Use fit_keywords to generate default operations.
-
-    Example fit_keywords entry:
-        "oversized": {
-            "operations": ["add_ease"],
-            "default_values": {
-                "chest_width": 5,
-                "body_width": 5
-            }
-        }
-
-    For MVP, we collapse default_values down to a single value_cm per operation.
-    Strategy:
-    - Take the max of the default_values for that fit keyword.
-    """
-    rules: List[Dict[str, Any]] = []
-
-    lower = text.lower()
-
-    for fit_word, config in fit_keywords.items():
-        if fit_word not in lower:
-            continue
-
-        ops = config.get("operations", [])
-        default_values = config.get("default_values", {})
-
-        # Collapse per-target default values into a single representative cm value.
-        numeric_defaults = []
-        for v in default_values.values():
-            try:
-                numeric_defaults.append(float(v))
-            except (TypeError, ValueError):
-                continue
-
-        if not numeric_defaults:
-            continue
-
-        # Use the max default value as a simple heuristic.
-        value_cm = max(numeric_defaults)
-
-        for op in ops:
-            rules.append(
-                {
-                    "operation": op,
-                    "value_cm": value_cm,
-                }
-            )
-
-    return rules
 
 
 # ---------------------------------------------------------------------------
@@ -199,47 +161,40 @@ def interpret_prompt(prompt: str, mapping: Optional[Dict[str, Any]] = None) -> L
     list[dict]
         A list of rule dictionaries matching the API contract.
 
-    Current Behavior (Heuristic)
-    ----------------------------
-    - Uses:
-        - operations.synonyms
-        - intensity_keywords
-        - fit_keywords
-    - Is intentionally simple and deterministic.
-    - Does NOT call any LLM yet.
-
-    Future Behavior
-    ---------------
-    - Replace the heuristic with an LLM call.
-    - Use mapping to constrain outputs (allowed operations, fit bundles, etc.).
+    Error Behavior
+    --------------
+    - If no supported operations are detected, raise InterpretationError.
+    - If operations are detected but no numeric value can be determined
+      (explicit cm or intensity), raise InterpretationError.
+    - The router is responsible for translating InterpretationError into the
+      appropriate API error code ("unsupported_instruction" or
+      "invalid_rule_format").
     """
     if mapping is None:
         mapping = load_prompt_mapping()
+
+    if not mapping:
+        raise InterpretationError("No prompt mapping configuration available.")
+
+    operations_cfg = mapping.get("operations", {})
+    if not operations_cfg:
+        raise InterpretationError("No operations defined in prompt mapping configuration.")
+
+    intensity_map = mapping.get("intensity_keywords", {}) or {}
 
     lower = prompt.lower()
     rules: List[Dict[str, Any]] = []
     seen_operations: set[str] = set()
 
-    operations_cfg = mapping.get("operations", {})
-    intensity_map = mapping.get("intensity_keywords", {}) or {}
-    fit_keywords = mapping.get("fit_keywords", {}) or {}
-
     # ------------------------------------------------------------------------
-    # 1. Fit keywords (e.g., "oversized", "relaxed", "fitted", "cropped")
-    # ------------------------------------------------------------------------
-    fit_rules = _apply_fit_keywords(lower, fit_keywords)
-    for r in fit_rules:
-        op = r["operation"]
-        if op not in seen_operations:
-            rules.append(r)
-            seen_operations.add(op)
-
-    # ------------------------------------------------------------------------
-    # 2. Operation synonyms + numeric/intensity handling
+    # 1. Determine numeric value from explicit cm or intensity.
     # ------------------------------------------------------------------------
     explicit_value = _extract_numeric_cm(lower)
     intensity_value = _detect_intensity(lower, intensity_map)
 
+    # ------------------------------------------------------------------------
+    # 2. Operation synonyms + numeric handling
+    # ------------------------------------------------------------------------
     for op_name, op_cfg in operations_cfg.items():
         synonyms = op_cfg.get("synonyms", [])
         if not isinstance(synonyms, list):
@@ -256,14 +211,14 @@ def interpret_prompt(prompt: str, mapping: Optional[Dict[str, Any]] = None) -> L
 
         # Determine value_cm priority:
         # 1. Explicit "X cm" in text
-        # 2. Intensity keyword (e.g., "a bit", "very oversized")
-        # 3. Fallback default of 3.0
+        # 2. Intensity keyword (e.g., "a bit")
         if explicit_value is not None:
             value_cm = explicit_value
         elif intensity_value is not None:
             value_cm = intensity_value
         else:
-            value_cm = 3.0
+            # For MVP, we do not invent arbitrary values without numeric basis.
+            raise InterpretationError("Missing numeric value for operation.")
 
         rules.append(
             {
@@ -274,14 +229,10 @@ def interpret_prompt(prompt: str, mapping: Optional[Dict[str, Any]] = None) -> L
         seen_operations.add(op_name)
 
     # ------------------------------------------------------------------------
-    # 3. Fallback rule (ensure non-empty rule set)
+    # 3. Ensure at least one valid rule exists
     # ------------------------------------------------------------------------
     if not rules:
-        # If mapping includes add_ease, use that as a safe default.
-        if "add_ease" in operations_cfg:
-            rules.append({"operation": "add_ease", "value_cm": 2.0})
-        else:
-            # Absolute last-resort fallback.
-            rules.append({"operation": "crop_hem", "value_cm": 2.0})
+        # No operations detected from the prompt → unsupported instruction.
+        raise InterpretationError("No supported operations could be inferred from prompt.")
 
     return rules
