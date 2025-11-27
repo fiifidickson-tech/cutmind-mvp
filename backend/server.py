@@ -20,26 +20,53 @@ Implementation Status:
     - rules_engine.py
     - geometry_engine.py
     - pattern_loader.py
+
+Error Contract:
+- All errors must follow the unified format:
+
+    {
+        "error": "some_error_code",
+        "details": {}
+    }
+
+- Typical error codes:
+    - unsupported_instruction
+    - invalid_rule_format
+    - invalid_pattern_id
+    - geometry_application_failed
+    - internal_error
 """
 
 from typing import List, Dict, Any
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 # These modules are expected to be implemented separately.
 # For now, they can be stubbed or left unimplemented.
 try:
-    from interpretation import interpret_prompt  # type: ignore
-    from rules_engine import validate_rules      # type: ignore
-    from geometry_engine import apply_geometry   # type: ignore
-    from pattern_loader import load_pattern_svg  # type: ignore
+    from interpretation import interpret_prompt, InterpretationError  # type: ignore
+    from rules_engine import validate_rules, RuleValidationError      # type: ignore
+    from geometry_engine import apply_geometry, GeometryEngineError   # type: ignore
+    from pattern_loader import load_pattern_svg, PatternNotFoundError # type: ignore
 except ImportError:
     # During early scaffold phase, these may not exist yet.
     interpret_prompt = None
     validate_rules = None
     apply_geometry = None
     load_pattern_svg = None
+
+    class InterpretationError(Exception):  # type: ignore
+        pass
+
+    class RuleValidationError(Exception):  # type: ignore
+        pass
+
+    class GeometryEngineError(Exception):  # type: ignore
+        pass
+
+    class PatternNotFoundError(Exception):  # type: ignore
+        pass
 
 
 app = FastAPI(
@@ -86,12 +113,19 @@ class ErrorResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def error_response(message: str, details: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def error_response(code: str, details: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """
     Return a unified error response matching the API contract.
+
+    Parameters
+    ----------
+    code : str
+        Machine-readable error code, e.g. "invalid_rule_format".
+    details : dict | None
+        Optional extra context (always an object in the final JSON).
     """
     return {
-        "error": message,
+        "error": code,
         "details": details or {},
     }
 
@@ -99,13 +133,13 @@ def error_response(message: str, details: Dict[str, Any] | None = None) -> Dict[
 def validate_pattern_id(pattern_id: str) -> None:
     """
     Ensure pattern_id is one of the supported MVP blocks.
-    Raises HTTPException on invalid ID.
+    Raises HTTPException with error code 'invalid_pattern_id' on invalid ID.
     """
     valid_ids = {"tshirt", "long_sleeve", "crop_top"}
     if pattern_id not in valid_ids:
         raise HTTPException(
             status_code=400,
-            detail=error_response("Invalid pattern ID", {"pattern_id": pattern_id}),
+            detail=error_response("invalid_pattern_id", {"pattern_id": pattern_id}),
         )
 
 
@@ -114,51 +148,86 @@ def validate_pattern_id(pattern_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-@app.post("/interpret", response_model=InterpretResponse, responses={400: {"model": ErrorResponse}})
+@app.post(
+    "/interpret",
+    response_model=InterpretResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
 def interpret(request: InterpretRequest):
     """
     Convert a natural-language prompt into structured rules.
 
-    Expected behavior (once implemented):
-    - Use interpretation.py / LLM to map prompt → rule JSON.
-    - Validate rule structure before returning.
+    Behavior:
+    - Uses interpretation.py to map prompt → rule JSON.
+    - Validates rule structure via Pydantic before returning.
+
+    Error mapping:
+    - Missing/invalid prompt → invalid_rule_format (400)
+    - InterpretationError → unsupported_instruction (400)
+    - Pydantic validation error on rules → invalid_rule_format (400)
+    - Other unexpected errors → internal_error (500)
     """
+    # Scaffold: if interpretation is not implemented yet, return dummy rules.
     if interpret_prompt is None:
-        # Placeholder behavior until interpretation.py is implemented.
-        # This keeps the API shape stable for frontend experiments.
         dummy_rules = [
             Rule(operation="crop_hem", value_cm=5.0),
             Rule(operation="widen_sleeve", value_cm=3.0),
         ]
         return InterpretResponse(rules=dummy_rules)
 
+    # Normal behavior
     try:
         raw_rules = interpret_prompt(request.prompt)
-        # raw_rules is expected to be a list of dicts with operation + value_cm.
-        rules = [Rule(**rule_dict) for rule_dict in raw_rules]
-        return InterpretResponse(rules=rules)
-    except Exception as exc:  # noqa: BLE001
+    except InterpretationError:
+        # Prompt couldn't be mapped into valid MVP rules.
         raise HTTPException(
             status_code=400,
-            detail=error_response("Invalid rule format", {"exception": str(exc)}),
-        ) from exc
+            detail=error_response("unsupported_instruction"),
+        )
+    except Exception:
+        # Catch-all for unexpected interpretation failures.
+        raise HTTPException(
+            status_code=500,
+            detail=error_response("internal_error"),
+        )
+
+    # Validate the shape of returned rules using Pydantic
+    try:
+        rules = [Rule(**rule_dict) for rule_dict in raw_rules]
+    except ValidationError:
+        raise HTTPException(
+            status_code=400,
+            detail=error_response("invalid_rule_format"),
+        )
+
+    return InterpretResponse(rules=rules)
 
 
-@app.post("/apply-rules", response_model=ApplyRulesResponse, responses={400: {"model": ErrorResponse}})
+@app.post(
+    "/apply-rules",
+    response_model=ApplyRulesResponse,
+    responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
 def apply_rules(request: ApplyRulesRequest):
     """
     Apply validated rules to a base pattern and return the modified SVG.
 
-    Expected behavior (once implemented):
+    Behavior:
     - Validate pattern_id.
     - Use rules_engine.py to validate/normalize rules.
     - Use pattern_loader.py to load base SVG.
     - Use geometry_engine.py to apply transformations.
+
+    Error mapping:
+    - Invalid pattern_id → invalid_pattern_id (400 or 404 if not found)
+    - RuleValidationError → invalid_rule_format (400)
+    - GeometryEngineError → geometry_application_failed (400)
+    - Other unexpected errors → internal_error (500)
     """
     validate_pattern_id(request.pattern_id)
 
+    # Scaffold: if core modules are not implemented, return placeholder SVG.
     if any(module is None for module in (validate_rules, load_pattern_svg, apply_geometry)):
-        # Placeholder behavior until individual modules are implemented.
         dummy_svg = "<svg><!-- placeholder modified pattern --></svg>"
         return ApplyRulesResponse(modified_pattern_svg=dummy_svg)
 
@@ -173,39 +242,76 @@ def apply_rules(request: ApplyRulesRequest):
         modified_svg = apply_geometry(base_svg, validated_rules)
 
         return ApplyRulesResponse(modified_pattern_svg=modified_svg)
-    except HTTPException:
-        # Re-raise any explicit HTTPException as-is
-        raise
-    except Exception as exc:  # noqa: BLE001
+
+    except RuleValidationError:
         raise HTTPException(
             status_code=400,
-            detail=error_response("Invalid rule format", {"exception": str(exc)}),
-        ) from exc
+            detail=error_response("invalid_rule_format"),
+        )
+    except PatternNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=error_response("invalid_pattern_id"),
+        )
+    except GeometryEngineError:
+        raise HTTPException(
+            status_code=400,
+            detail=error_response("geometry_application_failed"),
+        )
+    except HTTPException:
+        # Re-raise explicit HTTPExceptions as-is.
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=error_response("internal_error"),
+        )
 
 
-@app.get("/patterns/{pattern_id}", responses={200: {"content": {"image/svg+xml": {}}}, 400: {"model": ErrorResponse}})
+@app.get(
+    "/patterns/{pattern_id}",
+    responses={
+        200: {"content": {"image/svg+xml": {}}},
+        400: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
 def get_pattern(pattern_id: str):
     """
     Return the raw base SVG pattern for the given pattern_id.
 
+    Valid IDs:
     - tshirt
     - long_sleeve
     - crop_top
+
+    Error mapping:
+    - Invalid pattern_id → invalid_pattern_id (400/404)
+    - Other unexpected errors → internal_error (500)
     """
     validate_pattern_id(pattern_id)
 
+    # Scaffold: if loader is not implemented, return placeholder SVG.
     if load_pattern_svg is None:
-        # Placeholder SVG until pattern_loader is implemented.
         return "<svg><!-- placeholder base pattern --></svg>"
 
     try:
         svg = load_pattern_svg(pattern_id)
+        if not svg:
+            # Treat empty/None SVG as not found.
+            raise PatternNotFoundError()
         return svg
-    except Exception as exc:  # noqa: BLE001
+    except PatternNotFoundError:
         raise HTTPException(
-            status_code=400,
-            detail=error_response("Invalid pattern ID", {"exception": str(exc)}),
-        ) from exc
+            status_code=404,
+            detail=error_response("invalid_pattern_id"),
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=error_response("internal_error"),
+        )
 
 
 # Optional health check for sanity
