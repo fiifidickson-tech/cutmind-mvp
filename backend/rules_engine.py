@@ -14,15 +14,15 @@ MVP Scope:
 - Only accepts numeric values in centimeters (`value_cm`).
 - Does not handle conflict resolution; rules are applied sequentially.
 
-This module is called by server.py in:
+This module is called by the routing layer / server, e.g.:
 
-    validated_rules = validate_rules([rule.dict() for rule in request.rules])
+    validated_rules = validate_rules(rules)
 
-If validation fails, this module raises an exception, which server.py converts
-into a unified JSON error:
+If validation fails, this module raises RuleValidationError, which the router
+must convert into the unified JSON error:
 
     {
-        "error": "Invalid rule format",
+        "error": "invalid_rule_format",
         "details": {}
     }
 
@@ -36,19 +36,40 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+
+class RuleValidationError(Exception):
+    """
+    Raised when one or more rules fail validation.
+
+    The router must catch this exception and return an API error with:
+        "error": "invalid_rule_format"
+    using the unified error format.
+    """
+
+
 # ---------------------------------------------------------------------------
 # Allowed Operations (MVP)
 # ---------------------------------------------------------------------------
 
-# These operation names must match config/prompt_mapping.json → "operations" keys.
+# These operation names must match:
+# - mvp_spec.md section "In-Scope Adjustments"
+# - config/prompt_mapping.json → "operations" keys
 ALLOWED_OPERATIONS = {
+    # Body adjustments
     "crop_hem",
-    "extend_body",
+    "extend_hem",
+    "adjust_body_length",
+    "add_ease_body",
+    "remove_ease_body",
+    # Sleeve adjustments
     "widen_sleeve",
     "narrow_sleeve",
-    "add_ease",
-    "remove_ease",
-    "adjust_neckline_depth",
+    "shorten_sleeve",
+    "extend_sleeve",
+    "add_ease_sleeve",
+    # Neckline adjustments
+    "raise_neckline",
+    "lower_neckline",
 }
 
 
@@ -73,18 +94,18 @@ def _validate_operation(name: Any) -> str:
 
     Raises
     ------
-    ValueError
+    RuleValidationError
         If the operation is missing, not a string, or not allowed.
     """
     if not isinstance(name, str):
-        raise ValueError("operation must be a string")
+        raise RuleValidationError("operation must be a string")
 
     op = name.strip()
     if not op:
-        raise ValueError("operation cannot be empty")
+        raise RuleValidationError("operation cannot be empty")
 
     if op not in ALLOWED_OPERATIONS:
-        raise ValueError(f"unsupported operation: {op}")
+        raise RuleValidationError(f"unsupported operation: {op}")
 
     return op
 
@@ -105,16 +126,16 @@ def _validate_value_cm(value: Any) -> float:
 
     Raises
     ------
-    ValueError
+    RuleValidationError
         If value is missing or not numeric.
     """
     if value is None:
-        raise ValueError("value_cm is required")
+        raise RuleValidationError("value_cm is required")
 
     try:
         num = float(value)
     except (TypeError, ValueError) as exc:
-        raise ValueError("value_cm must be numeric") from exc
+        raise RuleValidationError("value_cm must be numeric") from exc
 
     return num
 
@@ -154,33 +175,34 @@ def validate_rules(rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     Raises
     ------
-    ValueError
+    RuleValidationError
         If the rules list or any rule is invalid.
 
     Notes
     -----
-    - server.py is responsible for catching exceptions and converting them into
-      the unified error format.
+    - The router or server is responsible for catching RuleValidationError and
+      converting it into the unified error format with:
+          "error": "invalid_rule_format".
     - This function does not decide how to resolve conflicting rules; it only
       validates format and allowed operations.
     """
     if not isinstance(rules, list):
-        raise ValueError("rules must be a list")
+        raise RuleValidationError("rules must be a list")
 
     if len(rules) == 0:
-        raise ValueError("rules list cannot be empty")
+        raise RuleValidationError("rules list cannot be empty")
 
     normalized_rules: List[Dict[str, Any]] = []
 
     for idx, raw_rule in enumerate(rules):
         if not isinstance(raw_rule, dict):
-            raise ValueError(f"rule at index {idx} must be a dict")
+            raise RuleValidationError(f"rule at index {idx} must be a dict")
 
         if "operation" not in raw_rule:
-            raise ValueError(f"rule at index {idx} missing 'operation' field")
+            raise RuleValidationError(f"rule at index {idx} missing 'operation' field")
 
         if "value_cm" not in raw_rule:
-            raise ValueError(f"rule at index {idx} missing 'value_cm' field")
+            raise RuleValidationError(f"rule at index {idx} missing 'value_cm' field")
 
         op = _validate_operation(raw_rule.get("operation"))
         val = _validate_value_cm(raw_rule.get("value_cm"))
