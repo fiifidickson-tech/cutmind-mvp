@@ -29,11 +29,33 @@ Later, this module should:
     - raise_neckline
     - lower_neckline
 - Serialize the modified SVG back into a string.
+
+Error Behavior:
+- In the fully implemented version, if a geometry operation fails in a way that
+  prevents generating a valid SVG, this module must raise GeometryEngineError.
+- The router must catch GeometryEngineError and convert it into the unified
+  error JSON with:
+      "error": "geometry_application_failed",
+      "details": {}
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict, List
+
+
+class GeometryEngineError(Exception):
+    """
+    Raised when the geometry engine cannot successfully apply one or more rules
+    to the SVG pattern.
+
+    The router must catch this and return:
+        {
+            "error": "geometry_application_failed",
+            "details": {}
+        }
+    using the unified error format.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +103,7 @@ def apply_geometry(svg: str, rules: List[Dict[str, Any]]) -> str:
     - Returns the input SVG unchanged.
     - Does not perform any actual geometry transformation.
     - Exists to keep the backend stable and allow end-to-end testing.
+    - Does not currently raise GeometryEngineError.
 
     Future Behavior (Target)
     ------------------------
@@ -88,6 +111,7 @@ def apply_geometry(svg: str, rules: List[Dict[str, Any]]) -> str:
     - Dispatch to specific transformation functions per operation.
     - Modify coordinates of paths/groups deterministically.
     - Preserve SVG validity and structure.
+    - Raise GeometryEngineError if a transformation cannot be applied safely.
     """
     # ------------------------------------------------------------------------
     # PLACEHOLDER IMPLEMENTATION
