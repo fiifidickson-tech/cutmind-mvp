@@ -1,7 +1,7 @@
 # CUTMIND Backend (MVP – To Be Implemented)
 
 The backend provides all core logic for the CUTMIND MVP.  
-It exposes APIs for natural-language interpretation, rule validation, pattern transformation, and tech pack generation.
+It exposes APIs for natural-language interpretation, rule validation, pattern transformation, and base pattern retrieval.
 
 This directory currently contains placeholders and documentation only.  
 Implementation will begin once the full architectural plan is finalized.
@@ -13,16 +13,16 @@ Implementation will begin once the full architectural plan is finalized.
 ### **1. LLM Interpretation Layer**
 - Converts natural-language instructions into structured JSON rules.
 - Uses provider (OpenAI or compatible) defined through environment variables.
-- Strictly produces rule objects; it does not perform geometry.
+- Strictly produces rule objects; it does *not* perform geometry.
 
 **Module:** `interpretation.py`
 
 ---
 
 ### **2. Rules Engine**
-- Validates structured rules.
+- Validates structured rules from the interpretation layer or client.
 - Ensures each operation is supported by the MVP.
-- Enforces numeric requirements.
+- Enforces numeric requirements (`value_cm` must be numeric).
 
 **Module:** `rules_engine.py`
 
@@ -31,37 +31,29 @@ Implementation will begin once the full architectural plan is finalized.
 ### **3. Pattern Geometry Engine**
 - Loads base SVG files.
 - Applies vector transformations based on validated rules.
-- Must produce valid, deterministic SVG.
+- Must produce valid, deterministic SVG output.
 
 **Module:** `geometry_engine.py`
 
 ---
 
-### **4. Tech Pack Generator**
-- Creates a tech pack draft from:
-  - pattern ID  
-  - applied rule set  
-  - simplified measurement outputs  
-- Output is JSON formatted for the frontend.
-
-**Module:** `techpack_generator.py`
-
----
-
-### **5. Pattern Loader**
+### **4. Pattern Loader**
 - Retrieves base pattern files from `/pattern`.
-- MVP supports one pattern: `tshirt_block_v1`.
+- MVP supports three blocks:
+  - `tshirt`
+  - `long_sleeve`
+  - `crop_top`
 
 **Module:** `pattern_loader.py`
 
 ---
 
-### **6. API Server**
-Responsible for exposing endpoints described in `api_contract.md`:
+### **5. API Server**
+Responsible for exposing MVP endpoints:
 
-- `POST /interpret`
-- `POST /apply-rules`
-- `GET /patterns/{id}`
+- `POST /interpret`  
+- `POST /apply-rules`  
+- `GET  /patterns/{id}`
 
 **Entry Point:** `server.py`
 
@@ -72,10 +64,10 @@ Responsible for exposing endpoints described in `api_contract.md`:
 ### Primary Target
 - **Python (FastAPI)**
 
-### Alternative Option (Not recommended for MVP)
-- Node.js (Express)
-
-The MVP prioritizes Python due to ease of integrating LLM logic and deterministic geometry tooling.
+Python is chosen for:
+- simpler LLM integration  
+- deterministic SVG/geometry processing  
+- clarity for future scaling  
 
 ---
 
@@ -83,32 +75,23 @@ The MVP prioritizes Python due to ease of integrating LLM logic and deterministi
 
 Engineers should review:
 
-- `mvp_spec.md` (system behavior)
+- `mvp_spec.md` (system behavior + in-scope rules)
 - `api_contract.md` (request/response shapes)
 - `router.md` (endpoint flow)
-- `config/prompt_mapping.json` (natural language → operations mapping)
+- `config/prompt_mapping.json` (language → operation mapping)
 - `/pattern/*` (base assets)
 
 ---
 
 ## Implementation Notes
 
-- No modules are implemented yet; all files are placeholders.
-- Backend should remain stateless for the MVP.
+- No modules are implemented yet; files are placeholders.
+- Backend must remain *stateless*.
 - Do not commit secrets. Use `.env` or system environment variables.
-- All errors must follow the shared error schema defined in `api_contract.md`.
+- All errors must follow the unified error schema:
 
----
-
-## Future Work (Post-MVP)
-
-Once the MVP is validated, backend expansion may include:
-
-- Support for multi-piece garments
-- DXF/AAMA import/export
-- Full production-ready tech pack generator
-- Authentication
-- Versioned API
-- Real-time pattern editing
-- Multi-size grading engine
-
+```json
+{
+  "error": "some_error_code",
+  "details": {}
+}
