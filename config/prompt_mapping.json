@@ -1,11 +1,19 @@
 {
-  "version": "0.1",
+  "version": "0.2",
   "default_unit": "cm",
 
   "garment_type": {
     "tshirt": {
       "aliases": ["t-shirt", "tee", "tee shirt", "shirt"],
       "default_pattern_id": "tshirt_block_v1"
+    },
+    "long_sleeve": {
+      "aliases": ["long sleeve", "long-sleeve tee", "long-sleeve shirt"],
+      "default_pattern_id": "long_sleeve_block_v1"
+    },
+    "crop_top": {
+      "aliases": ["crop top", "cropped tee", "cropped shirt"],
+      "default_pattern_id": "crop_top_block_v1"
     }
   },
 
