@@ -1,82 +1,118 @@
 """
 geometry_engine.py
 
+CUTMIND MVP – Geometry Engine
+
 Purpose:
-- This module applies validated rules to SVG pattern files.
-- It is responsible for deterministic, vector-based geometry transformations
-  on the base T-shirt block used in the MVP.
+- Apply validated rules to SVG pattern data.
+- This is where actual geometric transformations will live once implemented.
 
-Responsibilities:
-- Load the base SVG pattern (via pattern_loader or a provided SVG string).
-- Apply geometric transformations corresponding to each rule, such as:
-    - Cropping or extending the hem (body length)
-    - Widening or narrowing sleeves (sleeve width)
-    - Adding or removing ease (chest/body width)
-    - Adjusting neckline depth
-- Return a modified SVG string that remains valid and usable downstream.
+MVP Scaffold Status:
+- This file currently provides a **no-op (non-destructive) implementation**
+  so that:
+    - The API can be fully wired end-to-end.
+    - Frontend and integration work can start.
+    - The interface and data flow are stable.
+- All rules are accepted but the SVG is returned **unchanged**.
 
-Non-responsibilities (handled elsewhere):
-- Natural-language parsing → interpretation.py
-- Rule validation → rules_engine.py
-- Tech pack creation → techpack_generator.py
-- File I/O or HTTP handling → pattern_loader.py, server.py, router
-
-Scope (MVP):
-- One garment type: basic T-shirt block.
-- One pattern format: SVG.
-- No support for DXF, multi-piece garments, grading, or 3D visualization.
-
-Implementation Status:
-- Placeholder only. No real geometry logic implemented yet.
+Later, this module should:
+- Parse SVG into a manipulable structure.
+- Apply deterministic vector transformations for operations such as:
+    - crop_hem
+    - extend_hem
+    - widen_sleeve
+    - narrow_sleeve
+    - shorten_sleeve
+    - extend_sleeve
+    - add_ease_body
+    - add_ease_sleeve
+    - raise_neckline
+    - lower_neckline
+- Serialize the modified SVG back into a string.
 """
 
-from typing import List, Dict
+from __future__ import annotations
+
+from typing import Any, Dict, List
 
 
-class GeometryEngineError(Exception):
-    """Raised when a geometry operation fails or cannot be applied."""
-    pass
+# ---------------------------------------------------------------------------
+# Operation Dispatch Table (future use)
+# ---------------------------------------------------------------------------
+
+# This dict is a placeholder for future operation handlers.
+# Example structure for a real implementation:
+#
+#   OPERATION_HANDLERS = {
+#       "crop_hem": _apply_crop_hem,
+#       "widen_sleeve": _apply_widen_sleeve,
+#       ...
+#   }
+#
+# For the scaffold, we define the table but do not use it.
+OPERATION_HANDLERS: Dict[str, Any] = {}
 
 
-def apply_operations(svg: str, rules: List[Dict]) -> str:
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+def apply_geometry(svg: str, rules: List[Dict[str, Any]]) -> str:
     """
-    Apply a list of operations to the given SVG pattern.
+    Apply the given rules to the SVG pattern.
 
-    Expected inputs:
-        svg:   A string containing valid SVG markup representing the base pattern.
-        rules: A list of validated rule objects, e.g.:
+    Parameters
+    ----------
+    svg : str
+        The base SVG content as a string, loaded from pattern_loader.py.
+    rules : list[dict]
+        The validated rules from rules_engine.validate_rules(), each with:
+            - operation: str (e.g., "crop_hem")
+            - value_cm: float
 
-            [
-                { "operation": "crop_hem", "value_cm": 5 },
-                { "operation": "widen_sleeve", "value_cm": 3 }
-            ]
+    Returns
+    -------
+    str
+        The modified SVG content as a string.
 
-    Expected behavior (once implemented):
-    - Parse the SVG (paths, groups, key anchor points).
-    - For each rule:
-        - Map the rule to one or more geometric transformations.
-        - Adjust relevant control points, paths, or groups.
-    - Ensure the output remains a syntactically valid SVG string.
-
-    Determinism:
-    - Given the same SVG and the same rule list, the output must be identical.
-
-    Current placeholder behavior:
+    Current Behavior (Scaffold)
+    ---------------------------
     - Returns the input SVG unchanged.
+    - Does not perform any actual geometry transformation.
+    - Exists to keep the backend stable and allow end-to-end testing.
 
-    :param svg: Base SVG pattern as a string.
-    :param rules: List of validated rule dictionaries.
-    :return: Modified SVG pattern as a string.
-    :raises GeometryEngineError: if the SVG is invalid or operations cannot be applied.
+    Future Behavior (Target)
+    ------------------------
+    - Parse SVG (e.g., via xml.etree.ElementTree).
+    - Dispatch to specific transformation functions per operation.
+    - Modify coordinates of paths/groups deterministically.
+    - Preserve SVG validity and structure.
     """
-    if svg is None or not isinstance(svg, str) or not svg.strip():
-        raise GeometryEngineError("Input SVG is missing or invalid.")
+    # ------------------------------------------------------------------------
+    # PLACEHOLDER IMPLEMENTATION
+    # ------------------------------------------------------------------------
+    # In the final implementation, you would:
+    #
+    #   1. Parse the SVG string into an XML tree.
+    #   2. Loop over each rule in `rules`.
+    #   3. For each rule, look up a handler in OPERATION_HANDLERS and apply it.
+    #   4. Serialize the XML tree back to a string and return it.
+    #
+    # For now, we simply return the SVG unchanged to keep the system stable.
+    # ------------------------------------------------------------------------
 
-    # Placeholder: geometry logic is not implemented yet.
-    # In the future, this function would:
-    # - Parse the SVG DOM
-    # - Identify key measurement references (body length, sleeve width, etc.)
-    # - Apply numeric transformations based on `rules`
-    # - Re-serialize the SVG
+    # Example of what the real loop might look like:
+    #
+    #   tree = ElementTree.fromstring(svg)
+    #   for rule in rules:
+    #       op = rule["operation"]
+    #       val = rule["value_cm"]
+    #       handler = OPERATION_HANDLERS.get(op)
+    #       if handler is not None:
+    #           handler(tree, val)
+    #   return ElementTree.tostring(tree, encoding="unicode")
+    #
+    # But all of that is intentionally deferred for the MVP scaffold phase.
 
     return svg
