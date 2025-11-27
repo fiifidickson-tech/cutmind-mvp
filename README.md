@@ -1,76 +1,91 @@
 # CUTMIND MVP – Repository Overview
 
-CUTMIND is an AI-assisted pattern transformation system. It interprets natural-language instructions (e.g., “crop the hem by 5 cm,” “add 3 cm ease to the chest,” “make sleeves oversized”) and applies structured geometry operations to pattern files.
+CUTMIND is an AI-assisted pattern transformation system. It interprets natural-language instructions (e.g., “crop the hem by 5 cm,” “add 3 cm ease,” “make sleeves oversized”) and applies structured geometry operations to SVG pattern files.
 
-In addition to generating modified patterns, CUTMIND also produces a **tech pack draft** based on the applied adjustments. This provides founders and new designers with a ready-to-review document they can send to manufacturers. The tech pack is intentionally lightweight for the MVP and includes garment metadata, applied operations, and simplified measurements. Final manufacturing review is still expected, but this feature significantly accelerates early sampling and reduces the need for technical design expertise.
+The MVP supports **three garment block families**:
+- T-shirt  
+- Long sleeve  
+- Crop top  
 
-This repository contains the current specification and initial structure for the MVP. Implementation has not yet begun; this repo establishes the technical foundation for development.
+Each block contains three SVG pattern pieces:
+- front.svg  
+- back.svg  
+- sleeve.svg  
+
+This repository defines the structure and specification for the MVP. Implementation has not yet begun.
 
 ---
 
 ## 1. Folder Structure
 
-A clear explanation of each folder and its purpose.
-
 ### `/backend`
-(Currently unimplemented.) Intended to contain backend services responsible for:
-
-- LLM interpretation endpoint  
+Intended for backend services, including:
+- Natural-language → structured rule interpretation  
 - Rules engine  
-- Pattern geometry engine (operating on SVG)  
-- **Tech pack generation module (techpack_generator.py)**  
-- HTTP API for frontend and external clients  
+- SVG geometry engine  
+- HTTP API server (FastAPI example)  
 
 ### `/frontend`
-(Currently unimplemented.) Will contain the user interface for testing natural-language adjustments, previewing pattern output, and viewing the tech pack draft.
+Will contain the lightweight UI for entering prompts and previewing modified patterns.
 
 ### `/config`
-Contains configuration files, including mappings between natural-language terms and engineered operations. Future versions may include tech pack templates.
+Configuration files such as natural-language → operation mappings.
 
 ### `/pattern`
-Base pattern assets (e.g., the T-shirt block SVG), which serve as input to the geometry and tech pack engines.
+Base pattern assets for the three blocks:
+
+```
+/pattern
+  /tshirt
+    front.svg
+    back.svg
+    sleeve.svg
+  /long_sleeve
+    front.svg
+    back.svg
+    sleeve.svg
+  /crop_top
+    front.svg
+    back.svg
+    sleeve.svg
+```
 
 ### `mvp_spec.md`
-Full MVP specification, including requirements, constraints, and operational rules.
+Defines garment rules, supported operations, constraints, and mapping logic.
 
 ### `DEVELOPERS.md`
-Documentation for contributors, environment setup guidelines, and project conventions.
+Internal developer reference for conventions, architecture, and implementation flow.
 
 ---
 
 ## 2. Requirements and Vision
 
-CUTMIND’s MVP validates whether natural-language adjustments can be reliably converted into structured rules, and whether those rules can be applied deterministically to an SVG pattern.
+The MVP’s core goal is to validate:
 
-The MVP also validates whether a **tech pack draft** can be generated from the modified pattern and applied rules, giving users (especially early-stage founders) a fast way to communicate manufacturing intent.
-
-### High-level goals:
-- Demonstrate natural-language → structured rule translation  
-- Demonstrate deterministic geometry transformations  
-- Provide a minimal UI for testing  
-- Enable further expansion toward multi-garment capabilities  
-- **Generate a basic tech pack draft for manufacturer handoff**  
+- Whether an LLM can reliably translate natural-language garment modification requests into structured, machine-readable rules.
+- Whether those rules can be deterministically applied to SVG pattern pieces across **three block types**.
+- Whether CUTMIND can form a scalable foundation for multi-garment, multi-adjustment workflows.
 
 ---
 
 ## 3. How to Run This Repo (Once Code Exists)
 
-There is currently no executable code.  
-The following outline describes the expected project setup and will be updated once development begins.
+There is no executable code yet.  
+The following installation steps are placeholders.
 
 ---
 
-### Backend (Planned – FastAPI Example)
+### Backend (FastAPI Example)
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn server:app --reload
 ```
 
-### Example environment variables
+### Environment Variables
 
 ```env
 OPENAI_API_KEY=...
@@ -79,7 +94,7 @@ MODEL_PROVIDER=openai
 
 ---
 
-### Frontend (Planned – React/Vite Example)
+### Frontend (React/Vite Example)
 
 ```bash
 cd frontend
@@ -105,94 +120,89 @@ npm test
 
 ## 4. Contributions and Documentation Rules
 
-- Keep `README.md`, `mvp_spec.md`, and `DEVELOPERS.md` up to date with system changes.  
-- Do not commit secrets; use environment variables.  
-- Maintain documentation consistency as new components or folders are added.  
-- Ensure mappings, rule definitions, and geometry operations stay synchronized.  
-- The repository should be understandable to a new engineer within ten minutes.
+- Keep `README.md`, `mvp_spec.md`, and `DEVELOPERS.md` updated as system design evolves.  
+- Do not commit secrets or API keys.  
+- Maintain consistency in naming, structure, and mapping logic.  
+- Ensure rule definitions and geometry operations remain synchronized.  
+- The repo should be understandable to a new engineer within ten minutes.
 
 ---
 
 ## 5. Status
 
-This repository is a structural and specification scaffold. Implementation will begin once requirements are finalized.
+This repository is a structural and specification scaffold.  
+Implementation will begin once requirements are finalized.
 
 ---
 
 ## 6. Scope of the MVP
 
-The MVP is intentionally narrow. Its purpose is to validate whether natural-language instructions can be translated into consistent, reproducible pattern modifications using a rules-based geometry engine and whether a basic tech pack draft can be generated from those modifications.
-
 ### In-Scope
-- One garment type: basic T-shirt block  
-- One pattern format: SVG  
-- Core adjustments:
+- Three block families:
+  - T-shirt  
+  - Long sleeve  
+  - Crop top  
+- One format: **SVG patterns**  
+- Core operations:
   - Crop hem  
-  - Widen or narrow sleeves  
-  - Add or remove ease  
+  - Adjust body length  
+  - Adjust sleeve width  
+  - Adjust sleeve length  
+  - Add/remove ease  
   - Adjust neckline depth  
-  - Extend or shorten body length  
 - Natural-language → structured JSON mapping  
 - Deterministic geometry transformations  
-- Generation of a **tech pack draft**, including:
-  - garment metadata  
-  - applied operations  
-  - simplified measurement summaries  
-- Support for single or simple combined adjustments  
+- Simple combined adjustments (e.g., “widen sleeves and crop hem”)  
 
 ### Out-of-Scope
-- Multi-piece garments  
-- DXF / AAMA formats  
+- Tech packs (removed from MVP)  
+- Multi-piece garments beyond the three blocks  
+- DXF/AAMA formats  
 - Automatic grading  
-- Fabric or 3D simulation  
+- Fabric simulation  
+- 3D visualization  
 - Real-time editing  
-- Batch operations  
-- Factory-ready or region-specific tech pack formats  
-- Bill of Materials (BOM)  
-- Multi-size measurement tables  
-- Guarantees that the tech pack draft is production-ready without expert review  
+- Multi-size support  
+- BOM (Bill of Materials)  
+- Production-ready documentation  
 
 ---
 
 ## 7. Technical Assumptions
 
-### LLM Interpretation
-- LLM generates structured rule JSON only.  
-- No direct geometry manipulation by the model.  
-- Geometry engine behavior must be deterministic.
+### LLM Layer
+- Generates structured rule JSON only  
+- No geometry logic inside the LLM  
+- Must be deterministic given identical prompts  
 
 ### Pattern Format
-- SVG is the canonical pattern representation.  
-- No raster elements.  
-- Transformations must preserve SVG validity.
+- All patterns represented as clean SVG paths/groups  
+- Transformations must maintain SVG validity  
 
 ### Rules Engine
-- Explicit numeric instructions only.  
-- No conflict resolution in the MVP.
+- Only numeric & explicit instructions  
+- No conflict resolution in MVP  
+- Rules applied sequentially  
 
 ### Geometry Engine
-- Pure vector transformations.  
-- All changes must be traceable and reversible.  
-- Limited to the T-shirt block asset.
-
-### Tech Pack Generator
-- Produces a structured JSON draft only.  
-- Measurements are simplified and derived from applied rules.  
-- Not intended to replace full technical design review.
+- Vector operations only  
+- Modifies SVG elements based on parsed rules  
+- Supports three block families with consistent structure  
 
 ### Frontend
-- Thin client.  
-- All processing handled by backend.
+- Simple UI  
+- Displays SVG before/after  
 
 ### Backend
-- Stateless except optional caching.  
-- All secrets must be passed through environment variables.
+- Stateless  
+- Provides endpoints for interpreting prompts and applying rules  
 
 ---
 
 ## 8. Preliminary API Design
 
 ### POST `/interpret`
+
 Converts natural-language instructions into structured rules.
 
 **Request**
@@ -215,12 +225,13 @@ Converts natural-language instructions into structured rules.
 ---
 
 ### POST `/apply-rules`
-Applies structured rules to a base pattern and returns both the modified SVG and a tech pack draft.
+
+Applies rules to a specified block family.
 
 **Request**
 ```json
 {
-  "pattern_id": "tshirt_block_v1",
+  "pattern_id": "tshirt",
   "rules": [
     { "operation": "crop_hem", "value_cm": 5 }
   ]
@@ -230,28 +241,23 @@ Applies structured rules to a base pattern and returns both the modified SVG and
 **Response**
 ```json
 {
-  "modified_pattern_svg": "<svg>...</svg>",
-  "techpack": {
-    "garment_type": "tshirt",
-    "operations_applied": [
-      { "operation": "crop_hem", "value_cm": 5 }
-    ],
-    "measurements": {
-      "body_length_change_cm": -5
-    },
-    "notes": "This is a draft tech pack. Manufacturer review required."
-  }
+  "modified_pattern_svg": "<svg>...modified block...</svg>"
 }
 ```
 
 ---
 
 ### GET `/patterns/{id}`
-Returns pattern SVG assets.
+
+Returns raw SVG for:
+- tshirt  
+- long_sleeve  
+- crop_top  
 
 ---
 
-### Error Format
+### Unified Error Format
+
 ```json
 {
   "error": "Invalid rule format",
@@ -261,12 +267,13 @@ Returns pattern SVG assets.
 
 ---
 
-## 9. Planned Stack Decisions
+## 9. Planned Stack
 
 ### Backend
 - Python  
 - FastAPI  
-- `pydantic`, `uvicorn`  
+- pydantic  
+- uvicorn  
 
 ### Frontend
 - React  
@@ -274,58 +281,42 @@ Returns pattern SVG assets.
 
 ### LLM Layer
 - OpenAI or compatible provider  
-- No fine-tuning for MVP  
 
 ### Geometry
-- SVG-based geometry engine  
-- Custom vector math utilities  
+- Custom SVG transformation utilities  
 
 ### Deployment
-- Local or simple cloud environment during MVP  
-- CI/CD optional  
+- Local environment during MVP  
 
 ---
 
-## 10. Open Questions / Unknowns
+## 10. Open Questions
 
-### Pattern & Geometry
-- Should units be centimeters or pixels?  
-- Should transformations occur at path-level or group-level?  
-- How should ease be distributed?
+### Pattern
+- Should instructions use cm or SVG units?  
+- Should edits apply to paths or groups?  
 
-### Rules Engine
-- Should conflicting rules fail or auto-resolve?  
-- Should rules be applied sequentially or merged?
-
-### LLM Interpretation
-- How should ambiguous instructions be handled?  
-- Should the LLM infer numeric values?
-
-### Tech Pack
-- How detailed should the measurement summaries be?  
-- Should the tech pack draft be downloadable as HTML/PDF?  
-- Should users provide optional metadata (fabric, size, fit notes)?
+### Rules Processing
+- Should multiple rules merge or execute sequentially?  
 
 ### Frontend
-- Should a before/after preview exist?  
-- Should pattern uploading be allowed?
+- Should UI support side-by-side preview?  
 
 ### Backend
-- Should patterns be cached or regenerated on each request?
+- Should patterns be cached for faster responses?  
 
 ---
 
 ## 11. Future Extensions (Not for MVP)
 
-- Multi-piece garment support  
-- DXF import/export  
-- Automatic grading  
+- Tech packs (post-MVP)
+- Additional garment families  
+- DXF/AAMA export  
+- Automated grading  
 - 3D visualization  
-- Full natural-language garment generation  
-- Third-party tool integrations  
+- Real-time pattern editing  
+- Fabric simulation  
 - Bulk operations  
-- Desktop app  
-- Real-time previews  
 
 ---
 
