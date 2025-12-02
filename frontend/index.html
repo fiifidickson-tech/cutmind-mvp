@@ -1,1 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CUTMIND – Natural Language to Pattern Adjustments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050509;
+      --bg-soft: #0c0c13;
+      --card: #12121c;
+      --accent: #f97316;
+      --accent-soft: rgba(249, 115, 22, 0.1);
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: #1f2933;
+      --radius-lg: 16px;
+      --radius-xl: 22px;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.72);
+      --max-width: 1040px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Inter", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020308 45%, #000 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 20px 20px 64px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(to bottom, rgba(3, 7, 18, 0.96), transparent);
+      border-bottom: 1px solid rgba(31, 41, 55, 0.7);
+    }
+
+    .nav {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0, #fed7aa, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(249, 115, 22, 0.9);
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .logo-text-top {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .logo-text-main {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.32);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    .nav-cta {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(249, 115, 22, 0.8);
+      font-size: 13px;
+      font-weight: 500;
+      background: radial-gradient(circle at 0 0, #f97316, #be3b0a);
+      color: #111827;
+      box-shadow: 0 10px 25px rgba(249, 115, 22, 0.6);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(249, 115, 22, 0.75);
+    }
+
+    main {
+      flex: 1;
+    }
+
+    /* HERO */
+    #hero {
+      padding-top: 32px;
+      padding-bottom: 48px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr);
+      gap: 32px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 4vw, 40px);
+      line-height: 1.08;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+
+    .hero-gradient {
+      background: linear-gradient(to right, #f97316, #f9a8d4);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 460px;
+      margin-bottom: 22px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .btn-primary {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      background: radial-gradient(circle at 0 0, #f97316, #ea580c);
+      color: #111827;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 15px 35px rgba(249, 115, 22, 0.7);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 20px 40px rgba(249, 115, 22, 0.9);
+    }
+
+    .btn-ghost {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.7);
+      cursor: pointer;
+    }
+
+    .hero-footnote {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .hero-footnote span {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .hero-panel {
+      border-radius: var(--radius-xl);
+      background: radial-gradient(circle at 0 0, rgba(249, 115, 22, 0.15), transparent),
+        linear-gradient(135deg, #020617, #020617);
+      padding: 16px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .hero-panel-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .hero-tab {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .hero-tab.active {
+      background: rgba(249, 115, 22, 0.16);
+      border-color: rgba(249, 115, 22, 0.65);
+      color: #fbbf24;
+    }
+
+    .pill-light {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.8);
+      color: #9ca3af;
+    }
+
+    .hero-panel-body {
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      overflow: hidden;
+      min-height: 220px;
+    }
+
+    .panel-col {
+      padding: 12px 14px;
+      border-right: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .panel-col:last-child {
+      border-right: none;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .prompt-box {
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e5e7eb;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.8);
+    }
+
+    .prompt-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .prompt-tag {
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      color: #9ca3af;
+    }
+
+    .pattern-box {
+      background: radial-gradient(circle at 20% 0, rgba(249, 115, 22, 0.16), #020617);
+      height: 100%;
+      padding: 10px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 6px;
+    }
+
+    .pattern-grid {
+      border-radius: 10px;
+      border: 1px dashed rgba(75, 85, 99, 0.9);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .pattern-piece {
+      border-radius: 8px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .piece-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+    }
+
+    .piece-diagram {
+      flex: 1;
+      border-radius: 6px;
+      border: 1px dashed rgba(75, 85, 99, 0.9);
+      margin-top: 4px;
+      position: relative;
+    }
+
+    .piece-diagram::before {
+      content: "";
+      position: absolute;
+      inset: 16% 18%;
+      border-radius: 18px;
+      border: 1px solid rgba(156, 163, 175, 0.8);
+      border-top-left-radius: 4px;
+    }
+
+    .piece-diagram::after {
+      content: "+2cm hem";
+      position: absolute;
+      bottom: 3px;
+      right: 6px;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(249, 115, 22, 0.16);
+      color: #fed7aa;
+      border: 1px solid rgba(249, 115, 22, 0.6);
+    }
+
+    .rule-list {
+      font-size: 10px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .rule-list li {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+    }
+
+    .rule-bullet {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #f97316;
+      margin-top: 4px;
+    }
+
+    .hero-panel-footer {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .hero-panel-footer span.highlight {
+      color: #fbbf24;
+    }
+
+    /* SECTION WRAPPER */
+    section {
+      margin-bottom: 52px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: #9ca3af;
+      max-width: 520px;
+      margin-bottom: 18px;
+    }
+
+    /* HOW IT WORKS */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .step-card {
+      background: var(--bg-soft);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .step-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .step-body {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .step-foot {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature-card {
+      background: var(--bg-soft);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .feature-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #f97316;
+      margin-bottom: 4px;
+    }
+
+    .feature-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-body {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .feature-meta {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    /* WHO FOR + ROADMAP */
+    .split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pill-small {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      color: #9ca3af;
+    }
+
+    .roadmap-list {
+      font-size: 12px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .roadmap-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .roadmap-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #f97316;
+      margin-top: 6px;
+    }
+
+    .roadmap-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+
+    /* CTA */
+    .cta-card {
+      background: radial-gradient(circle at 0 0, rgba(249, 115, 22, 0.18), #020617);
+      border-radius: 20px;
+      border: 1px solid rgba(249, 115, 22, 0.6);
+      padding: 18px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 24px 55px rgba(249, 115, 22, 0.55);
+    }
+
+    .cta-main {
+      max-width: 420px;
+    }
+
+    .cta-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .cta-sub {
+      font-size: 13px;
+      color: #f3f4f6;
+    }
+
+    .cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .input-shell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 12px;
+      color: #9ca3af;
+      min-width: 220px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 14px 20px 22px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    footer .footer-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid,
+      .hero-panel-body,
+      .split-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .hero-panel-body {
+        min-height: 0;
+      }
+
+      .panel-col {
+        border-right: none;
+        border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      }
+
+      .panel-col:last-child {
+        border-bottom: none;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .steps-grid,
+      .features-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        padding-inline: 16px;
+      }
+
+      .container {
+        padding-inline: 16px;
+      }
+
+      .hero-panel {
+        margin-top: 6px;
+      }
+
+      .cta-card {
+        padding: 14px;
+      }
+
+      .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .input-shell {
+        width: 100%;
+      }
+
+      .cta-actions {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <nav class="nav">
+        <div class="nav-left">
+          <div class="logo-mark">C</div>
+          <div>
+            <div class="logo-text-top">Pattern Engine</div>
+            <div class="logo-text-main">CUTMIND</div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <div class="pill">
+            <span>Building MVP · Private alpha</span>
+          </div>
+          <button class="nav-cta">Join early list</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="container">
+        <!-- HERO -->
+        <section id="hero">
+          <div class="hero-grid">
+            <div>
+              <div class="badge">
+                <span class="badge-dot"></span>
+                <span>For small clothing brands & solo founders</span>
+              </div>
+              <h1 class="hero-title">
+                Type the garment in your head.<br />
+                <span class="hero-gradient">CUTMIND edits the pattern for you.</span>
+              </h1>
+              <p class="hero-sub">
+                CUTMIND is an AI pattern engine starting with T-shirt blocks. You
+                describe the fit in natural language – cropped, boxy, slightly
+                oversized – and we translate that into precise pattern edits.
+              </p>
+
+              <div class="hero-actions">
+                <button class="btn-primary">
+                  Get on the waitlist →
+                </button>
+                <button class="btn-ghost">Watch the 60s demo</button>
+              </div>
+              <p class="hero-footnote">
+                First cohort: <span>10–15 brands</span> designing tees in 2026.
+              </p>
+            </div>
+
+            <div class="hero-panel">
+              <div class="hero-panel-header">
+                <div class="hero-panel-tabs">
+                  <div class="hero-tab active">Prompt → Rules → Pattern</div>
+                  <div class="hero-tab">Coming soon</div>
+                </div>
+                <div class="pill-light">CUTMIND · TSHIRT_BLOCK_V1</div>
+              </div>
+
+              <div class="hero-panel-body">
+                <div class="panel-col">
+                  <div class="panel-label">Natural language prompt</div>
+                  <div class="prompt-box">
+                    “Take the base tee and:<br />
+                    – crop it 4cm above the hip<br />
+                    – add 3cm ease through the chest<br />
+                    – make the sleeves wider and boxier”
+                  </div>
+                  <div class="prompt-tag-row">
+                    <div class="prompt-tag">cropped</div>
+                    <div class="prompt-tag">boxy</div>
+                    <div class="prompt-tag">oversized chest</div>
+                    <div class="prompt-tag">TSHIRT_BLOCK_V1</div>
+                  </div>
+                </div>
+
+                <div class="panel-col">
+                  <div class="panel-label">Generated pattern edits</div>
+                  <div class="pattern-box">
+                    <div class="pattern-grid">
+                      <div class="pattern-piece">
+                        <div class="piece-title">Front panel</div>
+                        <div class="piece-diagram"></div>
+                        <ul class="rule-list">
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Shorten front length by 40mm from hem.</div>
+                          </li>
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Add 30mm ease across chest width.</div>
+                          </li>
+                        </ul>
+                      </div>
+                      <div class="pattern-piece">
+                        <div class="piece-title">Back panel</div>
+                        <div class="piece-diagram"></div>
+                        <ul class="rule-list">
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Match front crop for even hem line.</div>
+                          </li>
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Mirror chest ease to maintain fit.</div>
+                          </li>
+                        </ul>
+                      </div>
+                      <div class="pattern-piece">
+                        <div class="piece-title">Sleeve</div>
+                        <div class="piece-diagram"></div>
+                        <ul class="rule-list">
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Increase bicep width by 25mm.</div>
+                          </li>
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Lower hem curve for boxy drape.</div>
+                          </li>
+                        </ul>
+                      </div>
+                      <div class="pattern-piece">
+                        <div class="piece-title">Neckband</div>
+                        <div class="piece-diagram"></div>
+                        <ul class="rule-list">
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Keep neckline stable (no change).</div>
+                          </li>
+                          <li>
+                            <div class="rule-bullet"></div>
+                            <div>Preserve base block fit reference.</div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hero-panel-footer">
+                <span>Behind the scenes: JSON rules → SVG transforms</span>
+                <span class="highlight">MVP: T-shirt, long sleeve, crop top</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section id="how">
+          <div class="section-label">How it works</div>
+          <div class="section-title">From words to patterns in three steps.</div>
+          <p class="section-sub">
+            CUTMIND doesn’t replace your factory or 3D software. It sits in
+            between: translating your language into pattern edits you can plug into
+            your existing workflow.
+          </p>
+
+          <div class="steps-grid">
+            <div class="step-card">
+              <div class="step-index">01</div>
+              <div class="step-title">Pick a base block</div>
+              <p class="step-body">
+                Start with a vetted T-shirt block designed for real bodies, not
+                just stock models. Long sleeve and cropped variations ship next.
+              </p>
+              <p class="step-foot">
+                One base block, infinite riffs, consistent fit.
+              </p>
+            </div>
+            <div class="step-card">
+              <div class="step-index">02</div>
+              <div class="step-title">Describe the fit in your words</div>
+              <p class="step-body">
+                “Vintage boxy tee.” “Snatched baby tee.” “Relaxed but not sloppy.”
+                CUTMIND maps those phrases to measurable changes in the pattern.
+              </p>
+              <p class="step-foot">No spreadsheets of measurements required.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-index">03</div>
+              <div class="step-title">Export and send to your maker</div>
+              <p class="step-body">
+                Download the adjusted pattern and bring it into your 3D tool or
+                send it straight to your pattern-maker or manufacturer.
+              </p>
+              <p class="step-foot">
+                MVP = pattern edits only. Tech packs come later.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section id="features">
+          <div class="section-label">Why it matters</div>
+          <div class="section-title">Built for founders who think in vibes, not millimeters.</div>
+          <p class="section-sub">
+            If you know exactly how you want the garment to feel but hate talking in
+            pattern language, CUTMIND is the translation layer between your brain
+            and your block.
+          </p>
+
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-tag">Translation engine</div>
+              <div class="feature-title">Your phrases → pattern rules</div>
+              <p class="feature-body">
+                Predefined “ease bundles” turn words like cropped, boxy or oversized
+                into a consistent set of edits, so your brand has a repeatable
+                signature fit.
+              </p>
+              <p class="feature-meta">
+                Example: “oversized” might add 4–6cm through the chest and 2–3cm
+                through the sleeve.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-tag">Consistency</div>
+              <div class="feature-title">Lock in your base fit</div>
+              <p class="feature-body">
+                Once you dial in a base block you love, CUTMIND keeps that logic as
+                you crop, extend, or widen pieces – instead of reinventing the fit
+                in every file.
+              </p>
+              <p class="feature-meta">
+                Think “your brand’s tee” instead of random fit from factory to
+                factory.
+              </p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-tag">Speed</div>
+              <div class="feature-title">More ideas, fewer back-and-forths</div>
+              <p class="feature-body">
+                Test multiple variations in one sitting and only send the factory
+                the version you’re actually excited about.
+              </p>
+              <p class="feature-meta">
+                You stay in creative mode; CUTMIND handles the nerdy edits.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- WHO IT'S FOR + ROADMAP -->
+        <section id="who">
+          <div class="split-grid">
+            <div class="card">
+              <div class="section-label">Who it's for</div>
+              <div class="section-title">The “I know the vision, I just need the pattern” founder.</div>
+              <p class="section-sub">
+                You don’t have a full technical team. You have ideas, moodboards,
+                and a factory that keeps asking for “corrected patterns”.
+              </p>
+              <div class="pill-list">
+                <div class="pill-small">Streetwear founders</div>
+                <div class="pill-small">Bedroom brands</div>
+                <div class="pill-small">Small teams without pattern-makers</div>
+                <div class="pill-small">Designers using CLO3D / Browzwear</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-label">Roadmap</div>
+              <div class="section-title">Start narrow. Then expand.</div>
+              <ul class="roadmap-list">
+                <li class="roadmap-item">
+                  <div class="roadmap-dot"></div>
+                  <div>
+                    <div class="roadmap-label">Phase 1 – MVP</div>
+                    <div>
+                      Natural language → JSON rules → SVG edits for three base
+                      blocks: T-shirt, long sleeve, crop top.
+                    </div>
+                  </div>
+                </li>
+                <li class="roadmap-item">
+                  <div class="roadmap-dot"></div>
+                  <div>
+                    <div class="roadmap-label">Phase 2 – Library</div>
+                    <div>
+                      Hoodies, crewnecks, cargos and dresses. More ease bundles
+                      tuned for different aesthetics (Y2K, vintage boxy, slim).
+                    </div>
+                  </div>
+                </li>
+                <li class="roadmap-item">
+                  <div class="roadmap-dot"></div>
+                  <div>
+                    <div class="roadmap-label">Phase 3 – API & teams</div>
+                    <div>
+                      Plug CUTMIND into existing tools so bigger teams can keep
+                      their pipeline and just use the engine under the hood.
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section id="cta">
+          <div class="cta-card">
+            <div class="cta-main">
+              <div class="cta-title">Want to build this with me?</div>
+              <p class="cta-sub">
+                I’m looking for a small group of early clothing brands who want to
+                test CUTMIND while I finish the MVP. No spam, no fluff – just real
+                feedback and early access.
+              </p>
+            </div>
+            <div class="cta-actions">
+              <div class="input-shell">
+                <span>your@email.com</span>
+                <span style="font-size: 11px; color: #4b5563;">(placeholder for real form)</span>
+              </div>
+              <button class="btn-primary">
+                Join the early user list
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>© 2025 CUTMIND · MVP concept demo</span>
+        <span>Built in public. Not production ready (yet).</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
 
